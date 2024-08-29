@@ -43,14 +43,14 @@ end
 setmetatable(_G, {
   __index = function(_, tag)
     return function(...)
+      local atts
       local children = { ... }
-      local atts = {}
       if type(children[1]) == "table" and isAtts(children[1]) and #children ~= 1 then
         atts = children[1]
         children = { select(2, ...) }
       end
       children = flattenChildren(children)
-      return createElement(tag, atts, flattenChildren(children))
+      return createElement(tag, atts, children)
     end
   end
 })
