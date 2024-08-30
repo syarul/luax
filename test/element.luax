@@ -1,0 +1,3 @@
+local class = "container"
+local myElement = <div id="foo" class={class}>Hello, world!</div>
+return myElement
