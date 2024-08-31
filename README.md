@@ -1,5 +1,5 @@
 ## LuaX
-Shallow React createElement AST implementation in LUA. Inspired by https://bvisness.me/luax/. Also support JSX like syntax parsing
+Shallow React createElement implementation in LUA. Inspired by https://bvisness.me/luax/. Also support JSX like syntax parsing
 
 ### Usage
 
@@ -23,7 +23,7 @@ You'll get,
 
 ### Usage with JSX like syntax
 
-This require parsing it to the createElement AST.
+This require parsing it to the createElement.
 
 first create a luax file
 
