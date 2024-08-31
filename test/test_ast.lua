@@ -27,3 +27,7 @@ print(h(foo))
 local element = require('test.element')
 
 print(h(element))
+
+local varin = require('test.varin')
+
+print(h(varin))

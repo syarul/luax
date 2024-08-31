@@ -1,0 +1,45 @@
+name: Lua CI
+
+on:
+    push:
+      branches:
+        - main
+    pull_request:
+      branches:
+        - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download and Install Lua 5.4
+        run: |
+          sudo apt-get update
+          curl -LRO https://www.lua.org/ftp/lua-5.4.7.tar.gz
+          tar -xzvf lua-5.4.7.tar.gz
+          cd lua-5.4.7/
+          make linux
+          sudo make install
+
+      - name: Verify Lua Installation
+        run: |
+          lua -v
+
+      - name: Install Luarocks
+        run: |
+          wget https://luarocks.org/releases/luarocks-3.11.1.tar.gz
+          tar zxpf luarocks-3.11.1.tar.gz
+          cd luarocks-3.11.1/
+          ./configure && make && sudo make install
+
+      - name: Install Busted
+        run: |
+          sudo luarocks install busted
+
+      - name: Run tests
+        run: |
+          busted test --output=TAP

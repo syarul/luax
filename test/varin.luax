@@ -1,0 +1,8 @@
+local div_class = "container"
+local p_class = "title"
+local p_inner = "Hello, world!"
+local span_style = "color: red;"
+local span_inner = "This is a span"
+
+local el = <div id="div_1" class={div_class}><p id="p_2" style="border: 1px solid red;" class={p_class}>{p_inner}</p></div>
+return el

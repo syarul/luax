@@ -8,6 +8,7 @@ local function tokenize(input)
 
   while pos <= #input do
     local char = input:sub(pos, pos)
+
     if char == "<" then
       if input:sub(pos + 1, pos + 1) == "/" then
         local tagName = input:match("</(%w+)>", pos)
@@ -16,36 +17,32 @@ local function tokenize(input)
       else
         local tagName = input:match("<(%w+)", pos)
         pos = pos + #tagName + 1          -- skip "<tag>"
-        output = output .. tagName .. "(" -- opening the Lua function call
+        output = output .. tagName .. "({" -- opening the Lua function call
 
-        -- attributes
+        local tagEnd = input:find(">", pos)
         local attrs = ""
-        local attrEnd = input:find(">", pos)
-        while pos < attrEnd do
-          local attrName, attrValue = input:match("%s*(%w+)%s*=%s*{(.-)}", pos)
-          local staticAttrName, staticAttrValue = input:match('%s*(%w+)%s*=%s*"([^"]*)"', pos)
 
-          if #attrs > 0 then
-            attrs = attrs .. ", "
+        if true then
+          local attributesString = input:sub(pos, tagEnd)
+          local attributes = {}
+          local attrPos = 1
+          while attrPos <= #attributesString do
+            local attrNameBracket, attrValueBracket, endPosBracket = attributesString:match('%s*(%w+)%s*=%s*{([^}]*)}%s*()', attrPos)
+            local attrName, attrValue, endPos = attributesString:match('%s*(%w+)%s*=%s*"([^\'"]*)"%s*()', attrPos)
+            if attrName then
+              table.insert(attributes, attrName .. ' = "' .. attrValue .. '"')
+              attrPos = endPos
+              pos = pos + #attrName + #attrValue + 3
+            elseif attrNameBracket then
+              table.insert(attributes, attrNameBracket .. ' = ' .. attrValueBracket)
+              attrPos = endPosBracket
+              pos = pos + #attrNameBracket + #attrValueBracket + 3
+            else
+              break
+            end
           end
-
-          if attrName then
-            attrs = attrs .. attrName .. " = " .. attrValue
-            pos = pos + #attrName + #attrValue + 1 -- skip 'attr={value}'
-          end
-
-          if #attrs > 0 then
-            attrs = attrs .. ", "
-          end
-
-          if staticAttrName then
-            attrs = attrs .. staticAttrName .. ' = "' .. staticAttrValue .. '"'
-            pos = pos + #attrName + #attrValue + 1 -- skip 'attr=value'
-          end
-          break
-        end
-        if #attrs > 0 then
-          output = output .. '{' .. attrs .. '}, '
+          pos = pos + #attributes
+          output = output .. table.concat(attributes, ", ") -- add delimiter
         end
       end
     elseif char == "{" then
@@ -58,6 +55,7 @@ local function tokenize(input)
     else
       if char == ">" then
         pos = pos + 1
+        output = output .. "}, " -- opening the Lua function call
         local text = input:match("([^<]+)", pos)
         local textEnd = input:find("<", pos)
         local bracket = input:match("{(.-)}", pos)

@@ -1,3 +1,4 @@
 local class = "container"
-local myElement = <div id="foo" class={class}>Hello, world!</div>
+local val = 'value'
+local myElement = <div id="foo" bar="bar" d="1" class={class} val={val}>Hello, world!</div>
 return myElement
