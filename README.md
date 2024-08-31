@@ -1,6 +1,8 @@
 ## LuaX
 Shallow React createElement implementation in LUA. Inspired by https://bvisness.me/luax/. Also support JSX like syntax parsing
 
+[![Lua CI](https://github.com/syarul/luax/actions/workflows/lua.yml/badge.svg)](https://github.com/syarul/luax/actions/workflows/lua.yml)
+
 ### Usage
 
 ```lua
