@@ -1,13 +1,13 @@
 -- inspired by https://bvisness.me/luax/
 -- a React createElement/hyperscript shallow implementation in LUA
 -- usage
---local myElement = div(
+-- local myElement = div(
 --  { class = "container" },
 --  p({ class = "title" }, "Hello, world!"),
 --  span({ style = "color: red;" }, "This is a span")
---)
---
---print(h(myElement))
+-- )
+
+-- print(h(myElement))
 
 local function createElement(tag, atts, children)
   return {
@@ -56,8 +56,12 @@ setmetatable(_G, {
 })
 
 local function h(element)
+  local tkeys = {}
+  for k in pairs(element.atts) do table.insert(tkeys, k) end
+  table.sort(tkeys)
   local atts = ""
-  for k, v in pairs(element.atts) do
+  for _, k in ipairs(tkeys) do
+    local v = element.atts[k]
     if type(v) ~= "table" then
       atts = atts .. " " .. k .. "=\"" .. v .. "\""
     end

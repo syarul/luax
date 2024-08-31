@@ -16,18 +16,18 @@ local function tokenize(input)
         output = output .. ")"   -- close the Lua function call
       else
         local tagName = input:match("<(%w+)", pos)
-        pos = pos + #tagName + 1          -- skip "<tag>"
+        pos = pos + #tagName + 1           -- skip "<tag>"
         output = output .. tagName .. "({" -- opening the Lua function call
 
         local tagEnd = input:find(">", pos)
-        local attrs = ""
 
         if true then
           local attributesString = input:sub(pos, tagEnd)
           local attributes = {}
           local attrPos = 1
           while attrPos <= #attributesString do
-            local attrNameBracket, attrValueBracket, endPosBracket = attributesString:match('%s*(%w+)%s*=%s*{([^}]*)}%s*()', attrPos)
+            local attrNameBracket, attrValueBracket, endPosBracket = attributesString:match(
+              '%s*(%w+)%s*=%s*{([^}]*)}%s*()', attrPos)
             local attrName, attrValue, endPos = attributesString:match('%s*(%w+)%s*=%s*"([^\'"]*)"%s*()', attrPos)
             if attrName then
               table.insert(attributes, attrName .. ' = "' .. attrValue .. '"')
@@ -70,7 +70,6 @@ local function tokenize(input)
       end
     end
   end
-
   return output
 end
 
@@ -89,9 +88,10 @@ function require(moduleName)
     local str = preprocessLuaFile(luaxFile)
     -- eval back to buffer file after transform
     luaFile = load(str)()
+  else
+    return originalRequire(moduleName)
   end
   return luaFile
 end
 
 return h
-
