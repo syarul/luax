@@ -5,6 +5,7 @@ local originalRequire = require
 local function tokenize(input)
   local pos = 1
   local output = ""
+  local isNode
 
   while pos <= #input do
     local char = input:sub(pos, pos)
@@ -12,10 +13,12 @@ local function tokenize(input)
     if char == "<" then
       if input:sub(pos + 1, pos + 1) == "/" then
         local tagName = input:match("</(%w+)>", pos)
+        isNode = nil
         pos = pos + #tagName + 3 -- skip "</tag>"
         output = output .. ")"   -- close the Lua function call
       else
         local tagName = input:match("<(%w+)", pos)
+        if tagName then isNode = true end
         pos = pos + #tagName + 1           -- skip "<tag>"
         output = output .. tagName .. "({" -- opening the Lua function call
 
@@ -45,15 +48,15 @@ local function tokenize(input)
           output = output .. table.concat(attributes, ", ") -- add delimiter
         end
       end
-    elseif char == "{" then
+    elseif isNode and char == "{" then
       -- handle content inside curly braces
       local content = input:match("{(.-)}", pos)
       output = output .. content:match("%s*(.*)%s*")
       pos = pos + #content + 2 -- skip "{content}"
-    elseif char == "}" then
+    elseif isNode and char == "}" then
       pos = pos + 1
     else
-      if char == ">" then
+      if isNode and char == ">" then
         pos = pos + 1
         output = output .. "}, " -- opening the Lua function call
         local text = input:match("([^<]+)", pos)
