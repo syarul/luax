@@ -55,10 +55,29 @@ setmetatable(_G, {
   end
 })
 
+local function printTable(t, indent)
+  indent = indent or 0  -- Default to zero if no indent is provided
+  local tab = string.rep("  ", indent)  -- Create indentation for readability
+  
+  for key, value in pairs(t) do
+      if type(value) == "table" then
+          -- If the value is a table, recursively print it
+          print(tab .. tostring(key) .. ": ")
+          printTable(value, indent + 1)  -- Increase indentation for nested tables
+      else
+          -- Print the key and value
+          print(tab .. tostring(key) .. ": " .. tostring(value))
+      end
+  end
+end
+
+
 local function h(element)
+  if type(element) ~= "table" then return element or "" end
+  if element.tag == nil then return element.children or "" end
   local tkeys = {}
   for k in pairs(element.atts) do table.insert(tkeys, k) end
-  table.sort(tkeys)
+  if #tkeys then table.sort(tkeys) end
   local atts = ""
   for _, k in ipairs(tkeys) do
     local v = element.atts[k]

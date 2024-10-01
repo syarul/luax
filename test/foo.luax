@@ -1,3 +1,2 @@
-local foo = "foo"
-local t = <div>{foo}</div>
-return t
+local foo = "foobar"
+return <div children={foo}/>

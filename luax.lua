@@ -2,75 +2,84 @@ local h = require('h')
 
 local originalRequire = require
 
-local function tokenize(input)
+local function decentParserAST(input)
   local pos = 1
   local output = ""
-  local isNode
+  local isTag = 0
+  local isTextNode = 0
 
   while pos <= #input do
     local char = input:sub(pos, pos)
-
+    -- simple decent parser
+    -- opening tag
     if char == "<" then
-      if input:sub(pos + 1, pos + 1) == "/" then
-        local tagName = input:match("</(%w+)>", pos)
-        isNode = nil
-        pos = pos + #tagName + 3 -- skip "</tag>"
-        output = output .. ")"   -- close the Lua function call
-      else
-        local tagName = input:match("<(%w+)", pos)
-        if tagName then isNode = true end
-        pos = pos + #tagName + 1           -- skip "<tag>"
-        output = output .. tagName .. "({" -- opening the Lua function call
-
-        local tagEnd = input:find(">", pos)
-
-        if true then
-          local attributesString = input:sub(pos, tagEnd)
-          local attributes = {}
-          local attrPos = 1
-          while attrPos <= #attributesString do
-            local attrNameBracket, attrValueBracket, endPosBracket = attributesString:match(
-              '%s*(%w+)%s*=%s*{([^}]*)}%s*()', attrPos)
-            local attrName, attrValue, endPos = attributesString:match('%s*(%w+)%s*=%s*"([^\'"]*)"%s*()', attrPos)
-            if attrName then
-              table.insert(attributes, attrName .. ' = "' .. attrValue .. '"')
-              attrPos = endPos
-              pos = pos + #attrName + #attrValue + 3
-            elseif attrNameBracket then
-              table.insert(attributes, attrNameBracket .. ' = ' .. attrValueBracket)
-              attrPos = endPosBracket
-              pos = pos + #attrNameBracket + #attrValueBracket + 3
-            else
-              break
-            end
-          end
-          pos = pos + #attributes
-          output = output .. table.concat(attributes, ", ") -- add delimiter
-        end
+      local tagName = input:match("<(%w+)", pos)
+      local tagNameEnd = input:match("</(%w+)>", pos)
+      if isTag == 2 and tagName ~= nil then
+        -- children tag
+        output = output .. ", "
       end
-    elseif isNode and char == "{" then
-      -- handle content inside curly braces
-      local content = input:match("{(.-)}", pos)
-      output = output .. content:match("%s*(.*)%s*")
-      pos = pos + #content + 2 -- skip "{content}"
-    elseif isNode and char == "}" then
+      if tagName then
+        isTag = 1
+        output = output .. tagName .. "({"
+        pos = pos + #tagName + 1
+      elseif tagNameEnd then
+        isTag = 0
+        if isTextNode == 2 then
+          isTextNode = 0
+          output = output .. "\")"
+        else
+          output = output .. ")"
+        end
+        pos = pos + #tagNameEnd + 2
+      else
+        pos = pos + 1
+      end
+    elseif char == ">" then
+      if isTag == 1 then 
+        output = output .. " }"
+        isTag = 2
+      end
+      pos = pos + 1
+    elseif char == "/" then
+      -- self closing tag
+      isTag = 0
+      output = output .. " })"
       pos = pos + 1
     else
-      if isNode and char == ">" then
-        pos = pos + 1
-        output = output .. "}, " -- opening the Lua function call
-        local text = input:match("([^<]+)", pos)
-        local textEnd = input:find("<", pos)
-        local bracket = input:match("{(.-)}", pos)
-        if not bracket and text and pos < textEnd then
-          local str = text:match("^%s*(.-)%s*$")
-          output = output .. '"' .. str .. '"'
-          pos = pos + #text
+      local skip = false
+      if char and isTag == 2 then
+        isTextNode = 1
+        isTag = 3
+        output = output .. ", "
+      elseif isTag == 1 then
+        -- attributes
+        if char:match("%s") then
+          if  output:sub(-1) ~= "{" and output:sub(-1) == "\"" then
+            output = output .. ","
+          elseif  input:sub(pos -1, pos -1) == "}" then
+            output = output .. ","
+          end
+          skip = false
+        elseif char == "{" or char == "}" then
+          skip = true
         end
-      else
-        output = output .. char
-        pos = pos + 1
+
       end
+      if isTag ~= 0 then
+        if isTextNode == 1 and char == "{" or char == "}" then
+          skip = true
+          isTextNode = 3
+        elseif isTextNode == 1 then
+          isTextNode = 2
+          output = output .. "\""
+        end
+      end
+
+      if skip == false then
+        output = output .. char
+      end
+      pos = pos + 1
     end
   end
   return output
@@ -78,7 +87,7 @@ end
 
 local function preprocessLuaFile(inputFile)
   local inputCode = io.open(inputFile, "r"):read("*all")
-  local transformedCode = tokenize(inputCode)
+  local transformedCode = decentParserAST(inputCode)
   return transformedCode
 end
 

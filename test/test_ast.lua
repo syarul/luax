@@ -1,4 +1,4 @@
-function getDir()
+local function getDir()
   local handle
   local result
   if os.getenv("OS") == "Windows_NT" then
@@ -20,16 +20,26 @@ package.path = package.path .. ";" .. getDir() .. "/?.lua"
 
 local h = require('luax')
 
-local foo = require('test.foo')
+local div = require('test.1_div')
 
-print(h(foo))
+print(h(div))
+
+local node_value = require('test.2_node_value')
+
+print(h(node_value))
+
+-- local comment = require('test.3_comment')
+
+-- print(h(comment))
 
 local element = require('test.element')
-
-print(element)
 
 print(h(element))
 
 local varin = require('test.varin')
 
 print(h(varin))
+
+local foo = require('test.foo')
+
+print(h(foo))

@@ -1,3 +1,3 @@
-local attr = { class = "container", val = 'value' }
+local attr = { class = "container", val = "value" }
 local myElement = <div id="foo" bar="bar" d="1" class={attr.class} val={attr.val}>Hello, world!</div>
 return myElement
