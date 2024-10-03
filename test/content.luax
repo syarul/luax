@@ -1,0 +1,2 @@
+local content = "foo" .. "bar"
+return <footer class="footer" _="install Footer"><span class="todo-count" hx-trigger="load" _="install TodoCount"></span>{content}</footer>

@@ -7,6 +7,7 @@ local function decentParserAST(input)
   local output = ""
   local isTag = 0
   local isTextNode = 0
+  local deepNode = 0
 
   while pos <= #input do
     local char = input:sub(pos, pos)
@@ -20,11 +21,15 @@ local function decentParserAST(input)
         output = output .. ", "
       end
       if tagName then
+        deepNode = deepNode + 1
         isTag = 1
         output = output .. tagName .. "({"
         pos = pos + #tagName + 1
       elseif tagNameEnd then
-        isTag = 0
+        deepNode = deepNode - 1
+        if deepNode == 0 then
+          isTag = 0
+        end
         if isTextNode == 2 then
           isTextNode = 0
           output = output .. "\")"
@@ -42,8 +47,11 @@ local function decentParserAST(input)
       end
       pos = pos + 1
     elseif char == "/" then
+      deepNode = deepNode - 1
       -- self closing tag
-      isTag = 0
+      if deepNode == 0 then
+        isTag = 0
+      end
       output = output .. " })"
       pos = pos + 1
     else
@@ -64,9 +72,13 @@ local function decentParserAST(input)
         elseif char == "{" or char == "}" then
           skip = true
         end
-
       end
+
       if isTag ~= 0 then
+        -- add bracket to all attributes key
+        if input:match("%=") then
+          output = output:gsub('([%w%-_]+)%=(".-")', '["%1"]=%2')
+        end
         if isTextNode == 1 and char == "{" or char == "}" then
           skip = true
           isTextNode = 3

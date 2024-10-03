@@ -43,3 +43,7 @@ print(h(varin))
 local foo = require('test.foo')
 
 print(h(foo))
+
+local content = require('test.content')
+
+print(h(content))

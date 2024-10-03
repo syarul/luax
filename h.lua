@@ -17,20 +17,6 @@ local function createElement(tag, atts, children)
   }
 end
 
-local function flattenChildren(children)
-  local flattened = {}
-  for _, child in ipairs(children) do
-    if type(child) == "table" and child.isArray then
-      for _, subChild in ipairs(child) do
-        table.insert(flattened, subChild)
-      end
-    else
-      table.insert(flattened, child)
-    end
-  end
-  return flattened
-end
-
 local function isAtts(tbl)
   for k, v in pairs(tbl) do
     if type(k) ~= "string" or type(v) == "table" then
@@ -49,43 +35,33 @@ setmetatable(_G, {
         atts = children[1]
         children = { select(2, ...) }
       end
-      children = flattenChildren(children)
+      if atts == nil and isAtts(children[1]) then
+        atts = children[1]
+        children = { select(2, children) }
+      end
+      atts = atts or children[1]
       return createElement(tag, atts, children)
     end
   end
 })
 
-local function printTable(t, indent)
-  indent = indent or 0  -- Default to zero if no indent is provided
-  local tab = string.rep("  ", indent)  -- Create indentation for readability
-  
-  for key, value in pairs(t) do
-      if type(value) == "table" then
-          -- If the value is a table, recursively print it
-          print(tab .. tostring(key) .. ": ")
-          printTable(value, indent + 1)  -- Increase indentation for nested tables
-      else
-          -- Print the key and value
-          print(tab .. tostring(key) .. ": " .. tostring(value))
-      end
-  end
-end
-
-
 local function h(element)
   if type(element) ~= "table" then return element or "" end
-  if element.tag == nil then return element.children or "" end
   local tkeys = {}
   for k in pairs(element.atts) do table.insert(tkeys, k) end
   if #tkeys then table.sort(tkeys) end
   local atts = ""
+  local children = ""
   for _, k in ipairs(tkeys) do
     local v = element.atts[k]
     if type(v) ~= "table" then
-      atts = atts .. " " .. k .. "=\"" .. v .. "\""
+      if k ~= "children" then
+        atts = atts .. " " .. k .. "=\"" .. v .. "\""
+      else
+        children = v
+      end
     end
   end
-  local children = ""
   for _, child in ipairs(element.children) do
     if type(child) == "table" then
       children = children .. h(child)

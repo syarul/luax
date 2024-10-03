@@ -51,4 +51,11 @@ describe("LuaX", function()
     '<div class="container" id="div_1"><p class="title" id="p_2" style="border: 1px solid red;">Hello, world!</p></div>',
       h(el))
   end)
+
+  it("should return a HTML string when given JSX like syntax 4", function()
+    local el = require("test.content")
+    assert.is.equal(
+    '<footer _="install Footer" class="footer"><span _="install TodoCount" class="todo-count" hx-trigger="load"></span>foobar</footer>',
+      h(el))
+  end)
 end)
