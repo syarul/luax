@@ -35,27 +35,34 @@ describe("LuaX", function()
       h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax 1", function()
+  it("should return a HTML string when given JSX like syntax", function()
     local el = require("test.element")
     assert.is.equal('<div bar="bar" class="container" d="1" id="foo" val="value">Hello, world!</div>', h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax 2", function()
+  it("should return a HTML string when given children prop", function()
     local el = require("test.foo")
     assert.is.equal('<div>foobar</div>', h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax 3", function()
+  it("should return a HTML string when given JSX like syntax with nested node", function()
     local el = require("test.varin")
     assert.is.equal(
     '<div class="container" id="div_1"><p class="title" id="p_2" style="border: 1px solid red;">Hello, world!</p></div>',
       h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax 4", function()
+  it("should return a HTML string when given attributes with special characters", function()
     local el = require("test.content")
     assert.is.equal(
     '<footer _="install Footer" class="footer"><span _="install TodoCount" class="todo-count" hx-trigger="load"></span>foobar</footer>',
+      h(el))
+  end)
+
+  it("should return a HTML string when given input node", function()
+    local el = require("test.input")
+    assert.is.equal(
+    '<input _="install TodoEdit" class="edit" name="title" todo-id="0" value="foo">',
       h(el))
   end)
 end)
