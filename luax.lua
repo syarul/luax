@@ -76,9 +76,6 @@ local function decentParserAST(input)
 
       if isTag ~= 0 then
         -- add bracket to all attributes key
-        if input:match("%=") then
-          output = output:gsub('([%w%-_]+)%=(".-")', '["%1"]=%2')
-        end
         if isTextNode == 1 and char == "{" or char == "}" then
           skip = true
           isTextNode = 3
@@ -90,6 +87,9 @@ local function decentParserAST(input)
 
       if skip == false then
         output = output .. char
+      end
+      if char:match("%=") then
+        output = output:gsub('([%w%-_]+)%=', '["%1"]=')
       end
       pos = pos + 1
     end

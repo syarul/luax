@@ -28,10 +28,6 @@ local node_value = require('test.2_node_value')
 
 print(h(node_value))
 
--- local comment = require('test.3_comment')
-
--- print(h(comment))
-
 local element = require('test.element')
 
 print(h(element))
@@ -47,3 +43,7 @@ print(h(foo))
 local content = require('test.content')
 
 print(h(content))
+
+local input = require('test.input')
+
+print(h(input))

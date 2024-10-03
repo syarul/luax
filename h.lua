@@ -9,6 +9,22 @@
 
 -- print(h(myElement))
 
+local voidTags = {
+  "area", "base", "basefont", "br", "col",
+  "frame", "hr", "img", "input", "link",
+  "meta", "param", "embed", "command", "keygen",
+  "source", "track", "wbr"
+}
+
+local function isVoidTag(tag)
+  for _, voidTag in ipairs(voidTags) do
+      if voidTag == tag then
+          return true 
+      end
+  end
+  return false
+end
+
 local function createElement(tag, atts, children)
   return {
     tag = tag,
@@ -69,7 +85,11 @@ local function h(element)
       children = children .. child
     end
   end
-  return "<" .. element.tag .. atts .. ">" .. children .. "</" .. element.tag .. ">"
+  if isVoidTag(element.tag) then
+    return "<" .. element.tag .. atts .. ">"
+  else
+    return "<" .. element.tag .. atts .. ">" .. children .. "</" .. element.tag .. ">"
+  end
 end
 
 return h
