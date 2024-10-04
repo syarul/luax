@@ -1,0 +1,2 @@
+local todo = { id = "0", title = "foo" }
+return <input class="edit" name="title" value={todo.title or ' '} todo-id={todo.id} _="install TodoEdit"/>

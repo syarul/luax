@@ -32,7 +32,7 @@ local function decentParserAST(input)
         end
         if isTextNode == 2 then
           isTextNode = 0
-          output = output .. "\")"
+          output = output .. "]])"
         else
           output = output .. ")"
         end
@@ -81,7 +81,9 @@ local function decentParserAST(input)
           isTextNode = 3
         elseif isTextNode == 1 then
           isTextNode = 2
-          output = output .. "\""
+          if char ~= '\n' then
+            output = output .. "[["
+          end
         end
       end
 

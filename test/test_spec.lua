@@ -65,4 +65,18 @@ describe("LuaX", function()
     '<input _="install TodoEdit" class="edit" name="title" todo-id="0" value="foo">',
       h(el))
   end)
+
+  it("should return a HTML string when have conditional statement", function()
+    local el = require("test.input_with_con")
+    assert.is.equal(
+    '<input _="install TodoEdit" class="edit" name="title" todo-id="0">',
+      h(el))
+  end)
+
+  it("should return a HTML string with multi breakline", function()
+    local el = require("test.line_break")
+    assert.is.equal(
+    '<div><p color="red">foobar!</p></div>',
+      h(el))
+  end)
 end)

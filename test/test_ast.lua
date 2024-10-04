@@ -47,3 +47,11 @@ print(h(content))
 local input = require('test.input')
 
 print(h(input))
+
+local input_with_con = require('test.input_with_con')
+
+print(h(input_with_con))
+
+local linebreak = require('test.line_break')
+
+print(h(linebreak))

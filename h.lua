@@ -9,6 +9,22 @@
 
 -- print(h(myElement))
 
+function printTable(t, indent)
+  indent = indent or 0
+  local tab = string.rep("  ", indent)
+
+  for key, value in pairs(t) do
+    if type(value) == "table" then
+      print(tab .. tostring(key) .. ": ")
+      printTable(value, indent + 1)
+    else
+      print(tab .. tostring(key) .. ": " .. tostring(value))
+    end
+  end
+end
+
+
+
 local voidTags = {
   "area", "base", "basefont", "br", "col",
   "frame", "hr", "img", "input", "link",
