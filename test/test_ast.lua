@@ -22,36 +22,46 @@ local h = require('luax')
 
 local div = require('test.1_div')
 
-print(h(div))
+h(div)
 
 local node_value = require('test.2_node_value')
 
-print(h(node_value))
+h(node_value)
 
 local element = require('test.element')
 
-print(h(element))
+h(element)
 
 local varin = require('test.varin')
 
-print(h(varin))
+h(varin)
 
 local foo = require('test.foo')
 
-print(h(foo))
+h(foo)
 
 local content = require('test.content')
 
-print(h(content))
+h(content)
 
 local input = require('test.input')
 
-print(h(input))
+h(input)
 
 local input_with_con = require('test.input_with_con')
 
-print(h(input_with_con))
+h(input_with_con)
+
+local props = require('test.props')
+
+h(props)
 
 local linebreak = require('test.line_break')
 
-print(h(linebreak))
+h(linebreak)
+print("========================")
+
+local test = require('test.test')
+
+h(test)
+

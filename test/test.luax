@@ -1,0 +1,30 @@
+local id = '1'
+local class = "test"
+local val = "todo A"
+local val2 = "todo A Label"
+local val3 = "todo A Value"
+local val4 = "install Destroy"
+local val5 = "install TodoDblclick"
+return <li id={id} class={class} _="on destroy my.querySelector('button').click()">
+        <div class="view">
+            {val}
+          <label
+            hx-trigger="dblclick"
+            hx-patch="/edit-todo?id="..{id}.."&foo="..{class}
+            hx-target="next input"
+            hx-swap="outerHTML"
+            _="install TodoDblclick"
+          >
+            {val2}
+          </label>
+          <button
+            class="destroy"
+            hx-delete="/remove-todo?id="..{id}
+            hx-trigger="click"
+            hx-target="closest <li/>"
+            hx-swap="outerHTML"
+            _={val4}
+          />
+        </div>
+        {val3}
+      </li>

@@ -36,20 +36,28 @@ describe("LuaX", function()
   end)
 
   it("should return a HTML string when given JSX like syntax", function()
+    local el = require("test.1_div")
+    assert.is.equal('<div></div>', h(el))
+  end)
+
+  it("should return a HTML string when given JSX like syntax", function()
+    local el = require("test.2_node_value")
+    assert.is.equal('<div>xxxx</div>', h(el))
+  end)
+
+  it("should return a HTML string when given JSX like syntax", function()
     local el = require("test.element")
     assert.is.equal('<div bar="bar" class="container" d="1" id="foo" val="value">Hello, world!</div>', h(el))
+  end)
+
+  it("should return a HTML string when given JSX like syntax with nested node", function()
+    local el = require("test.varin")
+    assert.is.equal('<div class="container" id="div_1"><p class="title" id="p_2" style="border: 1px solid red;">Hello, world!</p></div>', h(el))
   end)
 
   it("should return a HTML string when given children prop", function()
     local el = require("test.foo")
     assert.is.equal('<div>foobar</div>', h(el))
-  end)
-
-  it("should return a HTML string when given JSX like syntax with nested node", function()
-    local el = require("test.varin")
-    assert.is.equal(
-    '<div class="container" id="div_1"><p class="title" id="p_2" style="border: 1px solid red;">Hello, world!</p></div>',
-      h(el))
   end)
 
   it("should return a HTML string when given attributes with special characters", function()
@@ -73,10 +81,23 @@ describe("LuaX", function()
       h(el))
   end)
 
+  it("should return a HTML string when given JSX like syntax", function()
+    local el = require("test.props")
+    assert.is.equal([[<div id="foo" style="color;red">    test
+  </div>]], h(el))
+  end)
+
   it("should return a HTML string with multi breakline", function()
     local el = require("test.line_break")
     assert.is.equal(
-    '<div><p color="red">foobar!</p></div>',
+    '<div><p color="red">foobar!</p>       </div>',
+      h(el))
+  end)
+
+  it("should return a HTML string with deep node tree", function()
+    local el = require("test.test")
+    assert.is.equal(
+    '<li _="on destroy my.querySelector(\'button\').click()" class="test" id="1"><div class="view">todo A<label _="install TodoDblclick" hx-patch="/edit-todo?id=1&foo=test" hx-swap="outerHTML" hx-target="next input" hx-trigger="dblclick">todo A Label</label><button _="install Destroy" class="destroy" hx-delete="/remove-todo?id=1" hx-swap="outerHTML" hx-target="closest <li/>" hx-trigger="click"></button></div>todo A Value</li>',
       h(el))
   end)
 end)

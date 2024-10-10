@@ -23,8 +23,6 @@ function printTable(t, indent)
   end
 end
 
-
-
 local voidTags = {
   "area", "base", "basefont", "br", "col",
   "frame", "hr", "img", "input", "link",
