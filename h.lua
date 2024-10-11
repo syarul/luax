@@ -32,9 +32,9 @@ local voidTags = {
 
 local function isVoidTag(tag)
   for _, voidTag in ipairs(voidTags) do
-      if voidTag == tag then
-          return true 
-      end
+    if voidTag == tag then
+      return true
+    end
   end
   return false
 end

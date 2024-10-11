@@ -28,40 +28,44 @@ local node_value = require('test.2_node_value')
 
 h(node_value)
 
-local element = require('test.element')
-
-h(element)
-
-local varin = require('test.varin')
-
-h(varin)
-
-local foo = require('test.foo')
-
-h(foo)
-
-local content = require('test.content')
+local content = require('test.4_content')
 
 h(content)
 
-local input = require('test.input')
+local element = require('test.5_element')
 
-h(input)
+h(element)
 
-local input_with_con = require('test.input_with_con')
+local foo = require('test.6_foo')
+
+h(foo)
+
+local input_with_con = require('test.7_input_with_con')
 
 h(input_with_con)
 
-local props = require('test.props')
+local module = require('test.8_input')
+
+h(module.EditTodo({ editing = true, title = "task", id = "1" }))
+
+local input2 = require('test.9_input2')
+
+h(input2)
+
+local linebreak = require('test.10_line_break')
+
+h(linebreak)
+
+local props = require('test.11_props')
 
 h(props)
 
-local linebreak = require('test.line_break')
-
-h(linebreak)
-print("========================")
-
-local test = require('test.test')
+local test = require('test.12_test')
 
 h(test)
+
+local varin = require('test.13_varin')
+
+h(varin)
+
 

@@ -1,0 +1,11 @@
+local todo = { id="1", done = false }
+
+  return <input 
+      class="toggle"
+      type="checkbox"
+      checked={'' or nil}
+      hx-patch="/toggle-todo?id="..{todo.id}.."&done="..{tostring(todo.done)}
+      hx-target="closest <li/>"
+      hx-swap="outerHTML"
+      _="install TodoCheck"
+    />

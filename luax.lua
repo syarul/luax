@@ -19,14 +19,14 @@ local function decentParserAST(input)
     -- escape " ' encapsulation
     -- opening tag
     if tok == "<" and not deepString and not deepStringApos then
-      local nextSpacingPos = input:find('%s',pos)
+      local nextSpacingPos = input:find("%s", pos)
       local tagRange = input:sub(pos, nextSpacingPos)
       local tagName = tagRange:match("<(%w+)", 0)
       local tagNameEnd = tagRange:match("</(%w+)>", 0)
       if tagName then deepNode = deepNode + 1 end
       if tagNameEnd then deepNode = deepNode - 1 end
       pos = pos + 1
-      
+
       if tagName and not deepString then
         isTag = true
         textNode = false
@@ -37,13 +37,13 @@ local function decentParserAST(input)
         end
         local step = 1
         -- enclose attributes if it empty
-        if tagRange:sub(#tagRange-1, #tagRange):gsub("[\r\n]", ""):match("^%s*(.-)$") == '>' then step = 0 end
+        if tagRange:sub(#tagRange - 1, #tagRange):gsub("[\r\n]", ""):match("^%s*(.-)$") == ">" then step = 0 end
         pos = pos + #tagName + step
       elseif tagNameEnd then
         if isTag and not textNode then
           isTag = not isTag
-          local trail = input:sub(0, pos-2):gsub("[%s\r\n]", "")
-          if trail:sub(#trail-1, #trail-1) == '/' then
+          local trail = input:sub(0, pos - 2):gsub("[%s\r\n]", "")
+          if trail:sub(#trail - 1, #trail - 1) == '/' then
             output = output .. ")"
           else
             output = output .. "})"
@@ -72,33 +72,33 @@ local function decentParserAST(input)
       output = output .. tok
       pos = pos + 1
     elseif tok == ">" and deepNode > 0 and not deepString and not deepStringApos then
-      if not textNode and isTag and input:sub(pos-1, pos-1) ~= "/" then
+      if not textNode and isTag and input:sub(pos - 1, pos - 1) ~= "/" then
         isTag = not isTag
         textNode = not textNode
-        output = output .. '}'
+        output = output .. "}"
       else
         isTag = not isTag
-        -- textNode = not textNode
-        output = output .. '})'
+        deepNode = deepNode - 1
+        output = output .. "})"
       end
       pos = pos + 1
-    elseif tok == "/" and input:sub(pos+1, pos+1) == '>' and not deepString and not deepStringApos then
+    elseif tok == "/" and input:sub(pos + 1, pos + 1) == ">" and not deepString and not deepStringApos then
       deepNode = deepNode - 1
-      output = output .. '})'
+      output = output .. "})"
       pos = pos + 2
-    elseif tok == '{' and deepNode > 0 and not deepString and not deepStringApos then
+    elseif tok == "{" and deepNode > 0 and not deepString and not deepStringApos then
       var = not var
       if not isTag then
-        output = output .. ','
+        output = output .. ","
       end
       pos = pos + 1
-    elseif tok == '}' and deepNode > 0 and not deepString and not deepStringApos then
+    elseif tok == "}" and deepNode > 0 and not deepString and not deepStringApos then
       var = not var
       pos = pos + 1
     elseif deepNode > 0 and not deepString and not deepStringApos then
       if tok:match("%s") then
-        if isTag and output:sub(-1) ~= "{" and output:sub(-1) == "\"" or
-          isTag and input:sub(pos -1, pos -1) == "}" then
+        if not var and isTag and output:sub(-1) ~= "{" and output:sub(-1) == "\"" or
+            isTag and input:sub(pos - 1, pos - 1) == "}" then
           output = output .. ","
         end
       end
@@ -118,8 +118,11 @@ local function decentParserAST(input)
         textNode = not textNode
         if textNode then
           local subNode = input:match("%s*<(%w+)", pos)
+          local trail = input:sub(pos - 10, pos):gsub("[%s\r\n]", "")
           if isTag and not subNode then
-            output = output .. "}, [["
+            if trail:sub(#trail, #trail) ~= ">" then
+              output = output .. "}, [["
+            end
           elseif deepNode > 0 and not subNode then
             output = output .. "[["
           end
