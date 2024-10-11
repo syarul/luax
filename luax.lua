@@ -24,26 +24,27 @@ local function decentParserAST(input)
       local tagName = tagRange:match("<(%w+)", 0)
       local tagNameEnd = tagRange:match("</(%w+)>", 0)
       if tagName then deepNode = deepNode + 1 end
-      if tagNameEnd then deepNode = deepNode - 1 end
       pos = pos + 1
 
       if tagName and not deepString then
         isTag = true
         textNode = false
+        if textNodeStart then
+          textNodeStart = not textNodeStart
+          output = output .. "]]"
+        end
         if deepNode > 1 then
           output = output .. ", " .. tagName .. "({"
         else
           output = output .. tagName .. "({"
         end
-        local step = 1
-        -- enclose attributes if it empty
-        if tagRange:sub(#tagRange - 1, #tagRange):gsub("[\r\n]", ""):match("^%s*(.-)$") == ">" then step = 0 end
-        pos = pos + #tagName + step
+        pos = pos + #tagName
       elseif tagNameEnd then
+        deepNode = deepNode - 1
         if isTag and not textNode then
           isTag = not isTag
           local trail = input:sub(0, pos - 2):gsub("[%s\r\n]", "")
-          if trail:sub(#trail - 1, #trail - 1) == '/' then
+          if trail:sub(#trail - 1, #trail - 1) == "/" then
             output = output .. ")"
           else
             output = output .. "})"
@@ -104,7 +105,7 @@ local function decentParserAST(input)
       end
 
       if textNode and not textNodeStart then
-        local subNode = input:match("%s*<(%w+)", pos)
+        local subNode = input:match("^%s*<(%w+)", pos) or input:match("^%s*{(%w+)", pos)
         if not isTag and not subNode and not var then
           textNodeStart = not textNodeStart
           output = output .. ", [["

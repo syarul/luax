@@ -1,0 +1,7 @@
+return <html lang="en" data-framework="htmx">
+  <head>
+    <title>HTMX • TodoMVC</title>
+  </head>
+  <body>
+  </body>
+</html>

@@ -68,4 +68,16 @@ local varin = require('test.13_varin')
 
 h(varin)
 
+local page = require('test.14_page')
+
+print(h(page.Page("todos")))
+
+local title = require('test.15_title')
+
+print(h(title))
+
+local p = require('test.16_p')
+
+print(h(p))
+
 
