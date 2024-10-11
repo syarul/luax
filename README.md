@@ -1,5 +1,5 @@
 ## LuaX
-React JSX implementation in LUA. 
+Decent parse for HTML, so you don't have to write as concatenates string, in short a React JSX implementation in LUA. 
 
 <a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.0.0-blue.svg" style="max-width:100%;"></a>
 [![Lua CI](https://github.com/syarul/luax/actions/workflows/lua.yml/badge.svg)](https://github.com/syarul/luax/actions/workflows/lua.yml)
