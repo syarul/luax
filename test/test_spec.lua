@@ -79,7 +79,7 @@ describe("LuaX", function()
   it("should return a HTML string when given input node", function()
     local el = require("test.9_input2")
     assert.is.equal(
-    '<input _="install TodoCheck" checked="" class="toggle" hx-patch="/toggle-todo?id=1&done=false" hx-swap="outerHTML" hx-target="closest <li/>" type="checkbox">',
+    '<input _="install TodoCheck" class="toggle" hx-patch="/toggle-todo?id=1&done=false" hx-swap="outerHTML" hx-target="closest <li/>" type="checkbox">',
       h(el))
   end)
 
