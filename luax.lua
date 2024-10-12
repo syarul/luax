@@ -2,58 +2,75 @@ local h = require('h')
 
 local originalRequire = require
 
+local function resetTable(store, data)
+  for key, value in pairs(data) do
+    store[key] = value
+  end
+end
+
 local function decentParserAST(input)
   local output = ""
   local pos = 1
-  local deepNode = 0
-  local deepString = false
-  local deepStringApos = false
-  local isTag = false
-  local textNode = false
-  local textNodeStart = false
   local var = false
+  local s = {
+    deepNode = 0,
+    deepString = false,
+    deepStringApos = false,
+    isTag = false,
+    textNode = false,
+    textNodeStart = false
+  }
+  local resetStore = {}
+  resetTable(resetStore, s)
+  local varStore = {}
 
   while pos <= #input do
     local tok = input:sub(pos, pos)
     -- simple decent parser
     -- escape " ' encapsulation
     -- opening tag
-    if tok == "<" and not deepString and not deepStringApos then
+    if tok == "<" and not s.deepString and not s.deepStringApos then
       local nextSpacingPos = input:find("%s", pos)
       local tagRange = input:sub(pos, nextSpacingPos)
       local tagName = tagRange:match("<(%w+)", 0)
       local tagNameEnd = tagRange:match("</(%w+)>", 0)
-      if tagName then deepNode = deepNode + 1 end
+      if tagName then s.deepNode = s.deepNode + 1 end
       pos = pos + 1
 
-      if tagName and not deepString then
-        isTag = true
-        textNode = false
-        if textNodeStart then
-          textNodeStart = not textNodeStart
+      if tagName and not s.deepString then
+        s.isTag = true
+        s.textNode = false
+        if s.textNodeStart then
+          s.textNodeStart = not s.textNodeStart
           output = output .. "]]"
         end
-        if deepNode > 1 then
-          output = output .. ", " .. tagName .. "({"
+        if s.deepNode > 1 then
+          -- handle internal return function
+          local ret = input:sub(pos-8, pos):gsub("%s\r\n", ""):sub(0, 6) == "return"
+          if ret then
+            output = output .. tagName .. "({"
+          else
+            output = output .. ", " .. tagName .. "({"
+          end
         else
           output = output .. tagName .. "({"
         end
         pos = pos + #tagName
       elseif tagNameEnd then
-        deepNode = deepNode - 1
-        if isTag and not textNode then
-          isTag = not isTag
+        s.deepNode = s.deepNode - 1
+        if s.isTag and not s.textNode then
+          s.isTag = not s.isTag
           local trail = input:sub(0, pos - 2):gsub("[%s\r\n]", "")
           if trail:sub(#trail - 1, #trail - 1) == "/" then
             output = output .. ")"
           else
             output = output .. "})"
           end
-        elseif isTag and textNode then
+        elseif s.isTag and s.textNode then
           output = output .. "]])"
         else
-          if textNodeStart then
-            textNodeStart = not textNodeStart
+          if s.textNodeStart then
+            s.textNodeStart = not s.textNodeStart
             output = output .. "]])"
           else
             output = output .. ")"
@@ -64,50 +81,61 @@ local function decentParserAST(input)
         output = output .. tok
         pos = pos + 1
       end
-    elseif tok == '"' and deepNode > 0 then
-      deepString = not deepString
+    elseif tok == '"' and s.deepNode > 0 then
+      s.deepString = not s.deepString
       output = output .. tok
       pos = pos + 1
-    elseif tok == "'" and deepNode > 0 then
-      deepStringApos = not deepStringApos
+    elseif tok == "'" and s.deepNode > 0 then
+      s.deepStringApos = not s.deepStringApos
       output = output .. tok
       pos = pos + 1
-    elseif tok == ">" and deepNode > 0 and not deepString and not deepStringApos then
-      if not textNode and isTag and input:sub(pos - 1, pos - 1) ~= "/" then
-        isTag = not isTag
-        textNode = not textNode
+    elseif tok == ">" and s.deepNode > 0 and not s.deepString and not s.deepStringApos then
+      if not s.textNode and s.isTag and input:sub(pos - 1, pos - 1) ~= "/" then
+        s.isTag = not s.isTag
+        s.textNode = not s.textNode
         output = output .. "}"
       else
-        isTag = not isTag
-        deepNode = deepNode - 1
+        s.isTag = not s.isTag
+        s.deepNode = s.deepNode - 1
         output = output .. "})"
       end
       pos = pos + 1
-    elseif tok == "/" and input:sub(pos + 1, pos + 1) == ">" and not deepString and not deepStringApos then
-      deepNode = deepNode - 1
+    elseif tok == "/" and input:sub(pos + 1, pos + 1) == ">" and not s.deepString and not s.deepStringApos then
+      s.deepNode = s.deepNode - 1
       output = output .. "})"
       pos = pos + 2
-    elseif tok == "{" and deepNode > 0 and not deepString and not deepStringApos then
+    elseif tok == "{" and s.deepNode > 0 and not s.deepString and not s.deepStringApos then
       var = not var
-      if not isTag then
-        output = output .. ","
+      if var then
+        -- snapshot currentState
+        resetTable(varStore, s)
+        -- reset currentState
+        resetTable(s, resetStore)
+      end
+      local trail = input:sub(pos - 20, pos-1):gsub("[%s\r\n]", "")
+      if trail:sub(#trail) == ">" or trail:sub(#trail) == "}" then
+        output = output .. ", "
       end
       pos = pos + 1
-    elseif tok == "}" and deepNode > 0 and not deepString and not deepStringApos then
+    elseif tok == "}" and var then
       var = not var
+      if not var then
+        -- restore currentState from snapshot
+        resetTable(s, varStore)
+      end
       pos = pos + 1
-    elseif deepNode > 0 and not deepString and not deepStringApos then
+    elseif s.deepNode > 0 and not s.deepString and not s.deepStringApos then
       if tok:match("%s") then
-        if not var and isTag and output:sub(-1) ~= "{" and output:sub(-1) == "\"" or
-            isTag and input:sub(pos - 1, pos - 1) == "}" then
+        if not var and s.isTag and output:sub(-1) ~= "{" and output:sub(-1) == "\"" or
+            s.isTag and input:sub(pos - 1, pos - 1) == "}" then
           output = output .. ","
         end
       end
 
-      if textNode and not textNodeStart then
+      if s.textNode and not s.textNodeStart then
         local subNode = input:match("^%s*<(%w+)", pos) or input:match("^%s*{(%w+)", pos)
-        if not isTag and not subNode and not var then
-          textNodeStart = not textNodeStart
+        if not s.isTag and not subNode and not var then
+          s.textNodeStart = not s.textNodeStart
           output = output .. ", [["
         end
       end
@@ -115,16 +143,16 @@ local function decentParserAST(input)
       output = output .. tok
       pos = pos + 1
     else
-      if not textNode and not deepString and not deepStringApos then
-        textNode = not textNode
-        if textNode then
+      if not s.textNode and not s.deepString and not s.deepStringApos then
+        s.textNode = not s.textNode
+        if s.textNode then
           local subNode = input:match("%s*<(%w+)", pos)
           local trail = input:sub(pos - 10, pos):gsub("[%s\r\n]", "")
-          if isTag and not subNode then
+          if s.isTag and not subNode then
             if trail:sub(#trail, #trail) ~= ">" then
               output = output .. "}, [["
             end
-          elseif deepNode > 0 and not subNode then
+          elseif s.deepNode > 0 and not subNode then
             output = output .. "[["
           end
         end
@@ -141,7 +169,9 @@ local function preprocessLuaFile(inputFile)
   local transformedCode = decentParserAST(inputCode)
   -- this to add [] bracket to table attributes
   transformedCode = transformedCode:gsub('([%w%-_]+)%=([^%s]+)', '["%1"]=%2')
+  -- print("===================")
   -- print(transformedCode)
+  -- print("===================")
   return transformedCode
 end
 

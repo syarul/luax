@@ -1,0 +1,31 @@
+
+local h = require('luax')
+
+local function map(a, fcn)
+  local b = {}
+  for _, v in ipairs(a) do
+    table.insert(b, fcn(v))
+  end
+  return b
+end
+
+local function fcn(filter)
+  return <li>
+    <a
+        class={filter.selected and 'selected' or nil}
+        href={filter.url}
+        _="on click add .selected to me"
+    >
+        {filter.name}
+    </a>
+  </li>
+end
+
+local function list(filters)
+  local content = table.concat(map(filters, function(filter)
+    return h(fcn(filter))
+  end), '\n')
+  return <ul class="todo-list">{content}</ul>
+end
+
+return list

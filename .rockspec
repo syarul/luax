@@ -1,4 +1,13 @@
-## LuaX
+package = "luax"
+version = "1.0.1-1"
+
+source = {
+    url = "https://github.com/syarul/luax/archive/refs/tags/v1.0.1.tar.gz",
+    dir = "luax-1.0.1"
+}
+description = {
+    summary = "HTML parse in Lua",
+    detailed = [[## LuaX
 Decent parse for HTML, so you don't have to write as concatenates string, in short a React JSX implementation in LUA. 
 
 <a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.0.1-blue.svg" style="max-width:100%;"></a>
@@ -87,3 +96,16 @@ return <ul class="filters" _="on load set $filter to me">
 See the test folder to see more usage cases.
 
 > Inspired by https://bvisness.me/luax/.
+]],
+    homepage = "https://github.com/syarul/luax",
+    license = "MIT"
+}
+dependencies = {
+    "lua >= 5.1"
+}
+build = {
+    type = "builtin",
+    modules = {
+        luax = "luax.lua"
+    }
+}

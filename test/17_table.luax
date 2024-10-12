@@ -1,0 +1,30 @@
+local h = require('luax')
+
+local module = {}
+local function map(a, fcn)
+  local b = {}
+  for _, v in ipairs(a) do
+    table.insert(b, fcn(v))
+  end
+  return b
+end
+
+function module.Filter(filters)
+  local content = table.concat(map(filters, function(filter)
+    return h(<li>
+      <a
+        class={filter.selected and 'selected' or nil}
+        href={filter.url}
+        _="on click add .selected to me"
+      >
+        {filter.name}
+      </a>
+    </li>)
+  end), '\n')
+
+  return <ul class="filters" _="on load set $filter to me">
+    {content}
+  </ul>
+end
+
+return module
