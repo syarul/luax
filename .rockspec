@@ -1,5 +1,5 @@
 package = "luax"
-version = "1.0.1-1"
+version = "1.0.1-2"
 
 source = {
     url = "https://github.com/syarul/luax/archive/refs/tags/v1.0.1.tar.gz",
@@ -106,6 +106,7 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        luax = "luax.lua"
+        luax = "luax.lua",
+        h = "h.lua"
     }
 }

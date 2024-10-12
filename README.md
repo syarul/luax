@@ -6,37 +6,33 @@ Decent parse for HTML, so you don't have to write as concatenates string, in sho
 
 ### Usage
 
+Install with `Luarocks`
+
+`luarocks install luax`
+
+load the `LuaX` `h` pragma **only** with
 ```lua
 local h = require('h')
 
-local el = div(
-  { class = "container" },
-  p({ class = "title" }, "Hello, world!"),
-  span({ style = "color: red;" }, "This is a span")
-)
-
-print(h(el))
+print(h(div({ style = "color: red;" }, "Hello from LuaX!")))
 ```
 
 You'll get,
 
 ```html
-<div class="container"><p class="title">Hello, world!</p><span style="color: red;">This is a span</span></div>
+<div style="color: red;">Hello from LuaX!</div>
 ```
-
-### Usage with JSX like syntax (HTML inside Lua)
-
-first create a `*.luax` file, then import the `LuaX` pragma `h`
+So how to use with actual HTML syntax in Lua? First create a `*.luax` file,
 
 ```lua
 -- el.luax
-local class = "container"
-local el = <div id="hello" class={class}>Hello, world!</div>
-return el
+local attr = { style="color: red;" }
+return <div style={attr.stlye}>hello from LuaX!</div>
 ```
 
 import it on to the main
 ```lua
+-- import luax to handle the parsing of *.luax file
 local h = require('luax')
 
 local el = require('el')
@@ -47,7 +43,7 @@ print(h(el))
 You'll get,
 
 ```html
-<div class="container" id="hello">Hello, world!</div>
+<div style="color: red;">Hello from LuaX!</div>
 ```
 
 Sample usage with list/table structure
