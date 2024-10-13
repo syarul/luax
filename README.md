@@ -69,6 +69,7 @@ local filters = {
 }
 
 local content = table.concat(map(filters, function(filter)
+  -- convert to string
   return h(<li>
     <a
       class={filter.selected and 'selected' or nil}
@@ -89,7 +90,7 @@ See the test folder to see more usage cases.
 
 ## Caveats
 
-> Since nodeName such `div`, `p`, etc+ are used as declared variables, so do NOT declare a function with the same name i.e.,
+- Since nodeName such `div`, `p`, etc+ are used as declared variables, so do **NOT** declare a function with the same name i.e.,
 
 ```lua
 local function li()
@@ -97,3 +98,7 @@ local function li()
 end
 
 ```
+- when using `table.concat` you need to convert to string so encapsulate with `h` pragma,
+- defining in bracket try to limit by using `'` instead of `"` i.e., `{foo and 'foo' or nil}`,
+- leave attributes assignment with no spacing `{ foo="foo" }` instead of `{ foo = "foo" }`,
+- <!--> HTML comments, not supported yet.
