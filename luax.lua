@@ -4,7 +4,7 @@ local originalRequire = require
 
 local function resetTable(store, data)
   for key, value in pairs(data) do
-    -- ignore output amd pos
+    -- ignore output and pos
     if key ~= "output" and key ~= "pos" then
       store[key] = value
     end

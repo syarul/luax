@@ -86,3 +86,14 @@ return <ul class="filters" _="on load set $filter to me">
 ```
 
 See the test folder to see more usage cases.
+
+## Caveats
+
+> Since nodeName such `div`, `p`, etc+ are used as declared variables, so do NOT declare a function with the same name i.e.,
+
+```lua
+local function li()
+  return <li>todo 1</li>
+end
+
+```
