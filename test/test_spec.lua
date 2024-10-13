@@ -1,4 +1,5 @@
-function GetDir()
+-- luacheck: globals describe it div p span
+local function GetDir()
   local handle
   local result
   if os.getenv("OS") == "Windows_NT" then
@@ -61,7 +62,7 @@ describe("LuaX", function()
     local el = require("test.6_foo")
     assert.is.equal('<div>foobar</div>', h(el))
   end)
-  
+
   it("should return a HTML string when have conditional statement", function()
     local el = require("test.7_input_with_con")
     assert.is.equal(
@@ -132,5 +133,5 @@ describe("LuaX", function()
 <li><a _="on click add .selected to me" href="#/active">Active    </a>  </li>
 <li><a _="on click add .selected to me" href="#/completed">Completed    </a>  </li></ul>]], h(el(filters)))
   end)
-  
+
 end)

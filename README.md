@@ -1,8 +1,13 @@
 ## LuaX
-Decent parse for HTML, so you don't have to write as concatenates string, in short a React JSX implementation in LUA. 
 
-<a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.0.1-blue.svg" style="max-width:100%;"></a>
+LuaX is Lua + XML Syntax extension with builtin decent parse. In retrospect it's akin to React JSX.
+
+
+<a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.0.2-blue.svg" style="max-width:100%;"></a>
 [![Lua CI](https://github.com/syarul/luax/actions/workflows/lua.yml/badge.svg)](https://github.com/syarul/luax/actions/workflows/lua.yml)
+
+## Decent Parser
+Initial inspiration comes from [https://bvisness.me/luax/](https://bvisness.me/luax/). The reason is to make it simpler with support of Lua `metaprogramming` where node `tags` is handle automatically without defining it.
 
 ### Usage
 
@@ -10,7 +15,7 @@ Install with `Luarocks`
 
 `luarocks install luax`
 
-load the `LuaX` `h` pragma **only** with
+If you only need the pragma without handling transpiling lua files, load the `LuaX` `h` pragma **only** with
 ```lua
 local h = require('h')
 
@@ -32,7 +37,7 @@ return <div style={attr.stlye}>hello from LuaX!</div>
 
 import it on to the main
 ```lua
--- import luax to handle the parsing of *.luax file
+-- import luax transpiler to handle the parsing of *.luax file
 local h = require('luax')
 
 local el = require('el')
@@ -46,7 +51,7 @@ You'll get,
 <div style="color: red;">Hello from LuaX!</div>
 ```
 
-Sample usage with list/table structure
+Sample usage with table structure
 
 ```lua
 local function map(a, fcn)
@@ -81,5 +86,3 @@ return <ul class="filters" _="on load set $filter to me">
 ```
 
 See the test folder to see more usage cases.
-
-> Inspired by https://bvisness.me/luax/.

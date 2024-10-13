@@ -1,7 +1,7 @@
 return {
   name = "syarul/luax",
-  version = "1.0.1",
-  description = "Decent parse for HTML, so you don't have to write as concatenates string",
+  version = "1.0.2",
+  description = "LuaX is Lua + XML Syntax extension with builtin decent parse. In retrospect it's akin to React JSX.",
   tags = { "lua", "module", "react", "jsx" },
   license = "MIT",
   dependencies = {},

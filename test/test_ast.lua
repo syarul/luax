@@ -70,15 +70,15 @@ h(varin)
 
 local page = require('test.14_page')
 
-print(h(page.Page("todos")))
+h(page.Page("todos"))
 
 local title = require('test.15_title')
 
-print(h(title))
+h(title)
 
 local p = require('test.16_p')
 
--- print(h(p))
+h(p)
 
 local filters = {
   { url = "#/",          name = "All",       selected = true },
@@ -87,9 +87,9 @@ local filters = {
 }
 
 local table = require('test.17_table')
-print(h(table.Filter(filters)))
+h(table.Filter(filters))
 
 local f = require('test.18_filter')
-print(h(f(filters)))
+h(f(filters))
 
 
