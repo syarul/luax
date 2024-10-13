@@ -4,8 +4,8 @@ local originalRequire = require
 
 local function resetTable(store, data)
   for key, value in pairs(data) do
-    -- ignore output and pos
-    if key ~= "output" and key ~= "pos" then
+    -- ignore output, pos and doctype
+    if key ~= "output" and key ~= "pos" and key ~= "docType" then
       store[key] = value
     end
   end
@@ -17,6 +17,7 @@ State.__index = State
 function State:new()
   return setmetatable({
     output = "",
+    docType = nil,
     pos = 1,
     deepNode = 0,
     deepString = false,
@@ -50,12 +51,40 @@ function State:toggle(key, bool)
   if bool ~= nil then self[key] = bool else self[key] = not self[key] end
 end
 
+local function formatDocTypeParams(input)
+  local result = {}
+  local cw = ""
+  local inQuotes = false
+  for i = 1, #input do
+    local char = input:sub(i, i)
+    if char == '"' then
+      inQuotes = not inQuotes
+      if cw ~= "" then
+        table.insert(result, '"\\"' .. cw .. '\\""')
+        cw = ""
+      end
+    elseif char == ' ' and not inQuotes then
+      if cw ~= "" then
+        table.insert(result, '"' .. cw .. '"')
+        cw = ""
+      end
+    else
+      cw = cw .. char
+    end
+  end
+  if cw ~= "" then
+    table.insert(result, '"' .. cw .. '"')
+  end
+  return table.concat(result, ', ')
+end
+
 local function decentParserAST(input)
   local var = false
   local s = State:new()
   local resetStore = {}
   resetTable(resetStore, s)
   local varStore = {}
+  local docTypeStartPos = 0
 
   while s.pos <= #input do
     local tok = input:sub(s.pos, s.pos)
@@ -63,10 +92,18 @@ local function decentParserAST(input)
     -- escape " ' encapsulation
     -- opening tag
     if tok == "<" and s:notStr() then
-      local nextSpacingPos = input:find("%s", s.pos)
+
+      local nextSpacingPos = input:find("%s", s.pos) or input:find("%>", s.pos)
       local tagRange = input:sub(s.pos, nextSpacingPos)
       local tagName = tagRange:match("<(%w+)", 0)
       local tagNameEnd = tagRange:match("</(%w+)>", 0)
+      local tagDocType = tagRange:match("<(%!%w+)", 0)
+      if tagDocType then
+        tagName = tagDocType:sub(2)
+        s.docType = true
+        docTypeStartPos = s.pos + #tagDocType + 2
+        s:inc()
+      end
       if tagName then s:incDeepNode() end
       s:inc()
 
@@ -129,6 +166,13 @@ local function decentParserAST(input)
         s:decDeepNode()
         s:conc("})")
       end
+
+      if s.docType then
+        s.docType = not s.docType
+        local docTypeParams = s.output:sub(docTypeStartPos, s.pos - 1)
+        local output = formatDocTypeParams(docTypeParams)
+        s.output = s.output:sub(0, docTypeStartPos-1) .. output .. s.output:sub(s.pos)
+      end
       s:inc()
     elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:notStr() then
       s:decDeepNode()
@@ -156,7 +200,7 @@ local function decentParserAST(input)
       s:inc()
     elseif s:xml() and s:notStr() then
       if tok:match("%s") then
-        if not var and s.isTag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
+        if not s.docType and not var and s.isTag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
             s.isTag and input:sub(s.pos - 1, s.pos - 1) == "}" then
           s:conc(",")
         end
@@ -187,14 +231,16 @@ local function decentParserAST(input)
       s:conc(tok, 1)
     end
   end
+  -- this to add [] bracket to table attributes
+  s.output = s.output:gsub('([%w%-_]+)%=([^%s]+)', '["%1"]=%2')
+  -- encapsulate output if doctype exist
+  if s.docType ~= nil then s:conc(")") end
   return s.output
 end
 
 local function preprocessLuaFile(inputFile)
   local inputCode = io.open(inputFile, "r"):read("*all")
   local transformedCode = decentParserAST(inputCode)
-  -- this to add [] bracket to table attributes
-  transformedCode = transformedCode:gsub('([%w%-_]+)%=([^%s]+)', '["%1"]=%2')
   -- print("===================")
   -- print(transformedCode)
   -- print("===================")

@@ -22,7 +22,10 @@ local function createElement(tag, atts, children)
   }
 end
 
-local function isAtts(tbl)
+local function isAtts(tbl, tag)
+  if tag:lower() == "doctype" then
+    return true
+  end
   for k, v in pairs(tbl) do
     if type(k) ~= "string" or type(v) == "table" then
       return false
@@ -36,11 +39,11 @@ setmetatable(_G, {
     return function(...)
       local atts
       local children = { ... }
-      if type(children[1]) == "table" and isAtts(children[1]) and #children ~= 1 then
+      if type(children[1]) == "table" and isAtts(children[1], tag) and #children ~= 1 then
         atts = children[1]
         children = { select(2, ...) }
       end
-      if atts == nil and isAtts(children[1]) then
+      if atts == nil and isAtts(children[1], tag) then
         atts = children[1]
         children = { select(2, children) }
       end
@@ -74,7 +77,9 @@ local function h(element)
       children = children .. child
     end
   end
-  if isVoidTag(element.tag) then
+  if element.tag:lower() == "doctype" then
+    return "<!" .. element.tag:lower() .. " " .. table.concat(element.atts, " ") .. ">" .. children
+  elseif isVoidTag(element.tag) then
     return "<" .. element.tag .. atts .. ">"
   else
     return "<" .. element.tag .. atts .. ">" .. children .. "</" .. element.tag .. ">"

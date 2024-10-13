@@ -1,4 +1,4 @@
--- luacheck: globals describe it div p span
+-- luacheck: globals DOCTYPE doctype html head body describe it div p span
 local function GetDir()
   local handle
   local result
@@ -36,9 +36,24 @@ describe("LuaX", function()
       h(el))
   end)
 
+  it("should return type HTML doctype", function()
+    local el = DOCTYPE({ "html" }, html({}, head({}), body({})))
+    assert.is.equal("<!doctype html><html><head></head><body></body></html>", h(el))
+  end)
+
+  it("should return type HTML doctype", function()
+    local el = DOCTYPE({ "HTML", "PUBLIC", "\"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\"" })
+    assert.is.equal([[<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">]], h(el))
+  end)
+
+  it("should return type HTML doctype", function()
+    local doc_type = require('test.19_doctype_setter')
+    assert.is.equal('<!doctype html><html><head></head><body></body></html>', h(doc_type))
+  end)
+
   it("should return a HTML string when given JSX like syntax", function()
-    local el = require("test.1_div")
-    assert.is.equal('<div></div>', h(el))
+    local doc_type_comp = require('test.20_doctype_setter_comp')
+    assert.is.equal('<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head></head><body></body></html>', h(doc_type_comp))
   end)
 
   it("should return a HTML string when given JSX like syntax", function()

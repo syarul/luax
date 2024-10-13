@@ -92,4 +92,12 @@ h(table.Filter(filters))
 local f = require('test.18_filter')
 h(f(filters))
 
+local doc_type = require('test.19_doctype_setter')
+
+h(doc_type)
+
+local doc_type_comp = require('test.20_doctype_setter_comp')
+
+h(doc_type_comp)
+
 
