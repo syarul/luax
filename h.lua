@@ -14,6 +14,14 @@ local function isVoidTag(tag)
   return false
 end
 
+local function kebabCase(tag)
+  if not tag:match("^[a-z]") and tag:match("%u%u") and tag:match("[^%w]") then
+    return tag
+  end
+  local kebab = tag:gsub("(%u)", "-%1"):lower()
+  return kebab:gsub("^%-", "")
+end
+
 local function createElement(tag, atts, children)
   return {
     tag = tag,
@@ -78,11 +86,11 @@ local function h(element)
     end
   end
   if element.tag:lower() == "doctype" then
-    return "<!" .. element.tag:lower() .. " " .. table.concat(element.atts, " ") .. ">" .. children
+    return "<!" .. kebabCase(element.tag:lower()) .. " " .. table.concat(element.atts, " ") .. ">" .. children
   elseif isVoidTag(element.tag) then
-    return "<" .. element.tag .. atts .. ">"
+    return "<" .. kebabCase(element.tag) .. atts .. ">"
   else
-    return "<" .. element.tag .. atts .. ">" .. children .. "</" .. element.tag .. ">"
+    return "<" .. kebabCase(element.tag) .. atts .. ">" .. children .. "</" .. kebabCase(element.tag) .. ">"
   end
 end
 

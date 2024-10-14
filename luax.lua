@@ -51,6 +51,12 @@ function State:toggle(key, bool)
   if bool ~= nil then self[key] = bool else self[key] = not self[key] end
 end
 
+local function kebabToCamel(str)
+  return str:gsub("%-(%w)", function(c)
+      return c:upper()
+  end)
+end
+
 local function formatDocTypeParams(input)
   local result = {}
   local cw = ""
@@ -95,8 +101,8 @@ local function decentParserAST(input)
 
       local nextSpacingPos = input:find("%s", s.pos) or input:find("%>", s.pos)
       local tagRange = input:sub(s.pos, nextSpacingPos)
-      local tagName = tagRange:match("<(%w+)", 0)
-      local tagNameEnd = tagRange:match("</(%w+)>", 0)
+      local tagName = tagRange:match("<([%w-]+)", 0)
+      local tagNameEnd = tagRange:match("</([%w-]+)>", 0)
       local tagDocType = tagRange:match("<(%!%w+)", 0)
       if tagDocType then
         tagName = tagDocType:sub(2)
@@ -104,7 +110,13 @@ local function decentParserAST(input)
         docTypeStartPos = s.pos + #tagDocType + 2
         s:inc()
       end
-      if tagName then s:incDeepNode() end
+      if tagName then
+        if tagName:match("(%-+)") then
+          tagName = kebabToCamel(tagName)
+          s:inc()
+        end
+        s:incDeepNode()
+      end
       s:inc()
 
       if tagName and not s.deepString then
@@ -127,6 +139,10 @@ local function decentParserAST(input)
         end
         s:inc(#tagName)
       elseif tagNameEnd then
+        if tagNameEnd:match("(%-+)") then
+          tagNameEnd = kebabToCamel(tagNameEnd)
+          s:inc()
+        end
         s:decDeepNode()
         if s.isTag and not s.textNode then
           s:toggle("isTag")

@@ -41,7 +41,7 @@ describe("LuaX", function()
     assert.is.equal("<!doctype html><html><head></head><body></body></html>", h(el))
   end)
 
-  it("should return type HTML doctype", function()
+  it("should return type HTML doctype with string attributes", function()
     local el = DOCTYPE({ "HTML", "PUBLIC", "\"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\"" })
     assert.is.equal([[<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">]], h(el))
   end)
@@ -51,49 +51,49 @@ describe("LuaX", function()
     assert.is.equal('<!doctype html><html><head></head><body></body></html>', h(doc_type))
   end)
 
-  it("should return a HTML string when given JSX like syntax", function()
+  it("should return type HTML doctype with string attributes", function()
     local doc_type_comp = require('test.20_doctype_setter_comp')
     assert.is.equal('<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head></head><body></body></html>', h(doc_type_comp))
   end)
 
-  it("should return a HTML string when given JSX like syntax", function()
-    local el = require("test.2_node_value")
+  it("should return a HTML string when given XML like syntax", function()
+    local el = require("test.02_node_value")
     assert.is.equal('<div>xxxx</div>', h(el))
   end)
 
   it("should return a HTML string when given attributes with special characters", function()
-    local el = require("test.4_content")
+    local el = require("test.04_content")
     assert.is.equal(
     '<footer _="install Footer" class="footer"><span _="install TodoCount" class="todo-count" hx-trigger="load"></span>foobar</footer>',
       h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax", function()
-    local el = require("test.5_element")
+  it("should return a HTML string when given XML like syntax", function()
+    local el = require("test.05_element")
     assert.is.equal('<div bar="bar" class="container" d="1" id="foo" val="value">Hello, world!</div>', h(el))
   end)
 
   it("should return a HTML string when given children prop", function()
-    local el = require("test.6_foo")
+    local el = require("test.06_foo")
     assert.is.equal('<div>foobar</div>', h(el))
   end)
 
   it("should return a HTML string when have conditional statement", function()
-    local el = require("test.7_input_with_con")
+    local el = require("test.07_input_with_con")
     assert.is.equal(
     '<input _="install TodoEdit" class="edit" name="title" todo-id="0">',
       h(el))
   end)
 
   it("should return a HTML string when given input node", function()
-    local module = require("test.8_input")
+    local module = require("test.08_input")
     assert.is.equal(
     '<input _="install TodoEdit" class="edit" name="title" todo-id="1" value="task">',
       h(module.EditTodo({ editing = true, title = "task", id = "1" })))
   end)
 
   it("should return a HTML string when given input node", function()
-    local el = require("test.9_input2")
+    local el = require("test.09_input2")
     assert.is.equal(
     '<input _="install TodoCheck" class="toggle" hx-patch="/toggle-todo?id=1&done=false" hx-swap="outerHTML" hx-target="closest <li/>" type="checkbox">',
       h(el))
@@ -106,7 +106,7 @@ describe("LuaX", function()
       h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax", function()
+  it("should return a HTML string when given XML like syntax", function()
     local el = require("test.11_props")
     assert.is.equal([[<div id="foo" style="color;red">    test
   </div>]], h(el))
@@ -119,12 +119,12 @@ describe("LuaX", function()
       h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax with nested node", function()
+  it("should return a HTML string when given XML like syntax with nested node", function()
     local el = require("test.13_varin")
     assert.is.equal('<div class="container" id="div_1"><p class="title" id="p_2" style="border: 1px solid red;">Hello, world!</p></div>', h(el))
   end)
 
-  it("should return a HTML string when given JSX like syntax with nested node", function()
+  it("should return a HTML string when given XML like syntax with nested node", function()
     local el = require("test.14_page")
     assert.is.equal([[<html data-framework="htmx" lang="en"><head><meta charSet="utf-8"><title>HTMX • TodoMVC</title><link href="https://unpkg.com/todomvc-common@1.0.5/base.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/todomvc-app-css/index.css" rel="stylesheet" type="text/css"><script src="/hs/start-me-up._hs" type="text/hyperscript"></script><script src="/hs/main._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-main._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-footer._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-show._hs" type="text/hyperscript"></script><script src="/hs/behaviors/add-todo._hs" type="text/hyperscript"></script><script src="/hs/behaviors/footer._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-all._hs" type="text/hyperscript"></script><script src="/hs/behaviors/clear-completed._hs" type="text/hyperscript"></script><script src="/hs/behaviors/destroy._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-count._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-dblclick._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-check._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-edit._hs" type="text/hyperscript"></script>    </head><body><section _="install ToggleMain end install ToggleFooter end install ToggleShow end" class="todoapp"><header class="header"><h1>todos</h1><input _="install AddTodo" class="new-todo" id="add-todo" name="title" placeholder="What needs to be done?"></header>toggleMaintodoListtodoFooter</section><footer _="on load debounced at 10ms call startMeUp() hashCache()" class="info"><p>Double-click to edit a todo</p><p>Created by <a href="http://github.com/syarul/">syarul</a></p><p>Part of <a href="http://todomvc.com">TodoMVC</a></p><img height="auto" src="https://htmx.org/img/createdwith.jpeg" width="250"></footer></body><script src="https://unpkg.com/todomvc-common@1.0.5/base.js"></script><script src="https://unpkg.com/htmx.org@1.9.10"></script><script src="https://unpkg.com/hyperscript.org/dist/_hyperscript.js"></script>  </html>]], h(el.Page("todos")))
   end)
@@ -135,18 +135,23 @@ describe("LuaX", function()
     { url = "#/completed", name = "Completed", selected = false },
   }
 
-  it("should return a HTML string when given JSX like syntax with table concat", function()
+  it("should return a HTML string when given XML like syntax with table concat", function()
     local el = require("test.17_table")
     assert.is.equal([[<ul _="on load set $filter to me" class="filters"><li><a _="on click add .selected to me" class="selected" href="#/">All      </a>    </li>
 <li><a _="on click add .selected to me" href="#/active">Active      </a>    </li>
 <li><a _="on click add .selected to me" href="#/completed">Completed      </a>    </li>  </ul>]], h(el.Filter(filters)))
   end)
 
-  it("should return a HTML string when given JSX like syntax with table concat", function()
+  it("should return a HTML string when given XML like syntax with table concat", function()
     local el = require("test.18_filter")
     assert.is.equal([[<ul class="todo-list"><li><a _="on click add .selected to me" class="selected" href="#/">All    </a>  </li>
 <li><a _="on click add .selected to me" href="#/active">Active    </a>  </li>
 <li><a _="on click add .selected to me" href="#/completed">Completed    </a>  </li></ul>]], h(el(filters)))
+  end)
+
+  it("should return a HTML string when given XML like syntax with kebab-case tag", function()
+    local fui = require("test.21_web_component")
+    assert.is.equal([[<fluent-button>Example</fluent-button>]], h(fui))
   end)
 
 end)

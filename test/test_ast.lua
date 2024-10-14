@@ -20,35 +20,35 @@ package.path = package.path .. ";" .. getDir() .. "/?.lua"
 
 local h = require('luax')
 
-local div = require('test.1_div')
+local div = require('test.01_div')
 
 h(div)
 
-local node_value = require('test.2_node_value')
+local node_value = require('test.02_node_value')
 
 h(node_value)
 
-local content = require('test.4_content')
+local content = require('test.04_content')
 
 h(content)
 
-local element = require('test.5_element')
+local element = require('test.05_element')
 
 h(element)
 
-local foo = require('test.6_foo')
+local foo = require('test.06_foo')
 
 h(foo)
 
-local input_with_con = require('test.7_input_with_con')
+local input_with_con = require('test.07_input_with_con')
 
 h(input_with_con)
 
-local module = require('test.8_input')
+local module = require('test.08_input')
 
 h(module.EditTodo({ editing = true, title = "task", id = "1" }))
 
-local input2 = require('test.9_input2')
+local input2 = require('test.09_input2')
 
 h(input2)
 
@@ -99,5 +99,9 @@ h(doc_type)
 local doc_type_comp = require('test.20_doctype_setter_comp')
 
 h(doc_type_comp)
+
+local fui = require('test.21_web_component')
+
+h(fui)
 
 
