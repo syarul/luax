@@ -52,9 +52,11 @@ function State:toggle(key, bool)
 end
 
 local function kebabToCamel(str)
-  return str:gsub("%-(%w)", function(c)
+  local tag = str:gsub("%-(%w)", function(c)
       return c:upper()
   end)
+  local _, count = str:gsub("-", "-")
+  return tag, count
 end
 
 local function formatDocTypeParams(input)
@@ -112,8 +114,9 @@ local function decentParserAST(input)
       end
       if tagName then
         if tagName:match("(%-+)") then
-          tagName = kebabToCamel(tagName)
-          s:inc()
+          local tag, count = kebabToCamel(tagName)
+          tagName = tag
+          s:inc(count)
         end
         s:incDeepNode()
       end
@@ -140,8 +143,9 @@ local function decentParserAST(input)
         s:inc(#tagName)
       elseif tagNameEnd then
         if tagNameEnd:match("(%-+)") then
-          tagNameEnd = kebabToCamel(tagNameEnd)
-          s:inc()
+          local tag, count = kebabToCamel(tagNameEnd)
+          tagNameEnd = tag
+          s:inc(count)
         end
         s:decDeepNode()
         if s.isTag and not s.textNode then

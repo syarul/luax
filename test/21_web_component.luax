@@ -1,1 +1,1 @@
-return <fluent-button>Example</fluent-button>
+return <fluent-button-test><fci-button>Example</fci-button></fluent-button-test>

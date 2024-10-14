@@ -151,7 +151,7 @@ describe("LuaX", function()
 
   it("should return a HTML string when given XML like syntax with kebab-case tag", function()
     local fui = require("test.21_web_component")
-    assert.is.equal([[<fluent-button>Example</fluent-button>]], h(fui))
+    assert.is.equal([[<fluent-button-test><fci-button>Example</fci-button></fluent-button-test>]], h(fui))
   end)
 
 end)
