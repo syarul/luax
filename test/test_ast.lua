@@ -104,4 +104,8 @@ local fui = require('test.21_web_component')
 
 h(fui)
 
+local st = require('test.22_script_tag')
+
+h(st)
+
 

@@ -126,7 +126,7 @@ describe("LuaX", function()
 
   it("should return a HTML string when given XML like syntax with nested node", function()
     local el = require("test.14_page")
-    assert.is.equal([[<html data-framework="htmx" lang="en"><head><meta charSet="utf-8"><title>HTMX • TodoMVC</title><link href="https://unpkg.com/todomvc-common@1.0.5/base.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/todomvc-app-css/index.css" rel="stylesheet" type="text/css"><script src="/hs/start-me-up._hs" type="text/hyperscript"></script><script src="/hs/main._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-main._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-footer._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-show._hs" type="text/hyperscript"></script><script src="/hs/behaviors/add-todo._hs" type="text/hyperscript"></script><script src="/hs/behaviors/footer._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-all._hs" type="text/hyperscript"></script><script src="/hs/behaviors/clear-completed._hs" type="text/hyperscript"></script><script src="/hs/behaviors/destroy._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-count._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-dblclick._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-check._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-edit._hs" type="text/hyperscript"></script>    </head><body><section _="install ToggleMain end install ToggleFooter end install ToggleShow end" class="todoapp"><header class="header"><h1>todos</h1><input _="install AddTodo" class="new-todo" id="add-todo" name="title" placeholder="What needs to be done?"></header>toggleMaintodoListtodoFooter</section><footer _="on load debounced at 10ms call startMeUp() hashCache()" class="info"><p>Double-click to edit a todo</p><p>Created by <a href="http://github.com/syarul/">syarul</a></p><p>Part of <a href="http://todomvc.com">TodoMVC</a></p><img height="auto" src="https://htmx.org/img/createdwith.jpeg" width="250"></footer></body><script src="https://unpkg.com/todomvc-common@1.0.5/base.js"></script><script src="https://unpkg.com/htmx.org@1.9.10"></script><script src="https://unpkg.com/hyperscript.org/dist/_hyperscript.js"></script>  </html>]], h(el.Page("todos")))
+    assert.is.equal([[<html data-framework="htmx" lang="en"><head><meta charSet="utf-8"><title>HTMX • TodoMVC</title><link href="https://unpkg.com/todomvc-common@1.0.5/base.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/todomvc-app-css/index.css" rel="stylesheet" type="text/css"><script src="/hs/start-me-up._hs" type="text/hyperscript"></script><script src="/hs/main._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-main._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-footer._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-show._hs" type="text/hyperscript"></script><script src="/hs/behaviors/add-todo._hs" type="text/hyperscript"></script><script src="/hs/behaviors/footer._hs" type="text/hyperscript"></script><script src="/hs/behaviors/toggle-all._hs" type="text/hyperscript"></script><script src="/hs/behaviors/clear-completed._hs" type="text/hyperscript"></script><script src="/hs/behaviors/destroy._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-count._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-dblclick._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-check._hs" type="text/hyperscript"></script><script src="/hs/behaviors/todo-edit._hs" type="text/hyperscript"></script></head><body><section _="install ToggleMain end install ToggleFooter end install ToggleShow end" class="todoapp"><header class="header"><h1>todos</h1><input _="install AddTodo" class="new-todo" id="add-todo" name="title" placeholder="What needs to be done?"></header>toggleMaintodoListtodoFooter</section><footer _="on load debounced at 10ms call startMeUp() hashCache()" class="info"><p>Double-click to edit a todo</p><p>Created by <a href="http://github.com/syarul/">syarul</a></p><p>Part of <a href="http://todomvc.com">TodoMVC</a></p><img height="auto" src="https://htmx.org/img/createdwith.jpeg" width="250"></footer></body><script src="https://unpkg.com/todomvc-common@1.0.5/base.js"></script><script src="https://unpkg.com/htmx.org@1.9.10"></script><script src="https://unpkg.com/hyperscript.org/dist/_hyperscript.js"></script></html>]], h(el.Page("todos")))
   end)
 
   local filters = {
@@ -152,6 +152,24 @@ describe("LuaX", function()
   it("should return a HTML string when given XML like syntax with kebab-case tag", function()
     local fui = require("test.21_web_component")
     assert.is.equal([[<fluent-button-test><fci-button>Example</fci-button></fluent-button-test>]], h(fui))
+  end)
+
+
+  it("should return a HTML string when given XML like syntax with script tag", function()
+    local scriptTag = require("test.22_script_tag")
+    assert.is.equal([[<div><script>            class CounterElement extends HTMLElement {
+                constructor() {
+                    super();
+                    this.attachShadow({ mode: 'open' });
+                }
+
+                connectedCallback() {
+                    console.log(1)
+                }
+            }
+
+            customElements.define('counter-element', CounterElement);
+        </script></div>]], h(scriptTag))
   end)
 
 end)

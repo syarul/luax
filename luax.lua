@@ -24,7 +24,9 @@ function State:new()
     deepStringApos = false,
     isTag = false,
     textNode = false,
-    textNodeStart = false
+    textNodeStart = false,
+    scriptNode = false,
+    scriptNodeInit = false,
   }, self)
 end
 
@@ -106,6 +108,7 @@ local function decentParserAST(input)
       local tagName = tagRange:match("<([%w-]+)", 0)
       local tagNameEnd = tagRange:match("</([%w-]+)>", 0)
       local tagDocType = tagRange:match("<(%!%w+)", 0)
+      local tagScript = tagName and tagName:match("script", 0) or tagNameEnd and tagNameEnd:match("script", 0)
       if tagDocType then
         tagName = tagDocType:sub(2)
         s.docType = true
@@ -128,6 +131,9 @@ local function decentParserAST(input)
         if s.textNodeStart then
           s:toggle("textNodeStart")
           s:conc("]]")
+        end
+        if tagScript then
+          s.scriptNodeInit = not s.scriptNodeInit
         end
         if s:xml(1) then
           -- handle internal return function
@@ -162,6 +168,9 @@ local function decentParserAST(input)
           if s.textNodeStart then
             s:toggle("textNodeStart")
             s:conc("]])")
+          elseif s.scriptNode then
+            s:toggle("scriptNode")
+            s:conc("]])")
           else
             s:conc(")")
           end
@@ -170,17 +179,27 @@ local function decentParserAST(input)
       else
         s:conc(tok, 1)
       end
-    elseif tok == '"' and s:xml() then
+    elseif tok == '"' and s:xml() and not s.scriptNode then
       s:toggle("deepString")
       s:conc(tok, 1)
-    elseif tok == "'" and s:xml() then
+    elseif tok == "'" and s:xml() and not s.scriptNode then
       s:toggle("deepStringApos")
       s:conc(tok, 1)
     elseif tok == ">" and s:xml() and s:notStr() then
-      if not s.textNode and s.isTag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
+      if not s.scriptNodeInit and not s.textNode and s.isTag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
         s:toggle("isTag")
         s:toggle("textNode")
         s:conc("}")
+      elseif s.scriptNodeInit then
+        s:toggle("isTag")
+        s:toggle("scriptNodeInit")
+        local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
+        if trail:sub(#trail) == "{" then
+          s:toggle("scriptNode")
+          s:conc("}, ")
+        else
+          s:conc("}")
+        end
       else
         s.isTag = not s.isTag
         s:decDeepNode()
@@ -194,11 +213,11 @@ local function decentParserAST(input)
         s.output = s.output:sub(0, docTypeStartPos-1) .. output .. s.output:sub(s.pos)
       end
       s:inc()
-    elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:notStr() then
+    elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:notStr() and not s.scriptNode then
       s:decDeepNode()
       s:conc("})")
       s:inc(2)
-    elseif tok == "{" and s:xml() and s:notStr() then
+    elseif tok == "{" and s:xml() and s:notStr() and not s.scriptNode then
       var = not var
       if var then
         -- snapshot currentState
@@ -211,14 +230,14 @@ local function decentParserAST(input)
         s:conc(", ")
       end
       s:inc()
-    elseif tok == "}" and var then
+    elseif tok == "}" and var and s:notStr() and not s.scriptNode then
       var = not var
       if not var then
         -- restore currentState from snapshot
         resetTable(s, varStore)
       end
       s:inc()
-    elseif s:xml() and s:notStr() then
+    elseif s:xml() and s:notStr() and not s.scriptNode then
       if tok:match("%s") then
         if not s.docType and not var and s.isTag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
             s.isTag and input:sub(s.pos - 1, s.pos - 1) == "}" then
