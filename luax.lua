@@ -48,7 +48,7 @@ function State:xml(level)
   if level ~= nil then return self.deepNode > level end
   return self.deepNode > 0
 end
-function State:notStr() return not self.deepString and not self.deepStringApos end
+function State:notStr() return not self.deepString and not self.deepStringApos and not self.scriptNode end
 function State:toggle(key, bool)
   if bool ~= nil then self[key] = bool else self[key] = not self[key] end
 end
@@ -168,9 +168,6 @@ local function decentParserAST(input)
           if s.textNodeStart then
             s:toggle("textNodeStart")
             s:conc("]])")
-          elseif s.scriptNode then
-            s:toggle("scriptNode")
-            s:conc("]])")
           else
             s:conc(")")
           end
@@ -179,6 +176,9 @@ local function decentParserAST(input)
       else
         s:conc(tok, 1)
       end
+    elseif tok == "<" and not s:notStr() and input:match("</([%w-]+)>", s.pos) == "script" then
+      s:toggle("scriptNode")
+      s:conc("]]")
     elseif tok == '"' and s:xml() and not s.scriptNode then
       s:toggle("deepString")
       s:conc(tok, 1)
@@ -196,7 +196,7 @@ local function decentParserAST(input)
         local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
         if trail:sub(#trail) == "{" then
           s:toggle("scriptNode")
-          s:conc("}, ")
+          s:conc("}, [[\n")
         else
           s:conc("}")
         end
@@ -213,11 +213,11 @@ local function decentParserAST(input)
         s.output = s.output:sub(0, docTypeStartPos-1) .. output .. s.output:sub(s.pos)
       end
       s:inc()
-    elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:notStr() and not s.scriptNode then
+    elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:notStr() then
       s:decDeepNode()
       s:conc("})")
       s:inc(2)
-    elseif tok == "{" and s:xml() and s:notStr() and not s.scriptNode then
+    elseif tok == "{" and s:xml() and s:notStr() then
       var = not var
       if var then
         -- snapshot currentState
@@ -230,14 +230,14 @@ local function decentParserAST(input)
         s:conc(", ")
       end
       s:inc()
-    elseif tok == "}" and var and s:notStr() and not s.scriptNode then
+    elseif tok == "}" and var and s:notStr() then
       var = not var
       if not var then
         -- restore currentState from snapshot
         resetTable(s, varStore)
       end
       s:inc()
-    elseif s:xml() and s:notStr() and not s.scriptNode then
+    elseif s:xml() and s:notStr() then
       if tok:match("%s") then
         if not s.docType and not var and s.isTag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
             s.isTag and input:sub(s.pos - 1, s.pos - 1) == "}" then
@@ -271,7 +271,19 @@ local function decentParserAST(input)
     end
   end
   -- this to add [] bracket to table attributes
-  s.output = s.output:gsub('([%w%-_]+)%=([^%s]+)', '["%1"]=%2')
+  -- ignore adding within backtick javascript
+
+  s.output = s.output:gsub('([%w%-_]+)%=([^%s]+)', function (attr, value)
+    local pos = s.output:find(attr .. " = " .. value) or 1
+    local preStrInterpolation = s.output:sub(1, pos):reverse():find("%`")
+    local postStrInterpolation = s.output:find("%`", pos)
+
+    if not preStrInterpolation and not postStrInterpolation and attr:find('[-_]') then
+        return '["' .. attr .. '"]=' .. value
+    else
+        return attr .. '=' .. value
+    end
+  end)
   -- encapsulate output if doctype exist
   if s.docType ~= nil then s:conc(")") end
   return s.output

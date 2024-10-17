@@ -2,7 +2,7 @@
 
 LuaX is Lua + XML Syntax extension with built-in decent parse. In retrospect it's akin to React JSX.
 
-<a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.0.5-blue.svg" style="max-width:100%;"></a>
+<a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.0.6-blue.svg" style="max-width:100%;"></a>
 [![Lua CI](https://github.com/syarul/luax/actions/workflows/lua.yml/badge.svg)](https://github.com/syarul/luax/actions/workflows/lua.yml)
 
 ## Decent Parser
@@ -89,6 +89,9 @@ See the test folder to see more usage cases.
 
 ## Sample Project
 [https://github.com/syarul/todomvc-lua-luasocket-htmx-_hyperscript](https://github.com/syarul/todomvc-lua-luasocket-htmx-_hyperscript)
+
+## VSCode Integration
+Install from [VSCode Extension Marketplace](https://marketplace.visualstudio.com/items?itemName=syarul.luax-syntax-highlighter) to support syntax highlighlight for `.luax` extension
 
 ## Caveats
 

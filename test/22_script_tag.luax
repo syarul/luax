@@ -1,16 +1,16 @@
 return <div>
-        <script>
-            class CounterElement extends HTMLElement {
-                constructor() {
-                    super();
-                    this.attachShadow({ mode: 'open' });
-                }
-
-                connectedCallback() {
-                    console.log(1)
-                }
+    <script>
+        class CounterElement extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
             }
 
-            customElements.define('counter-element', CounterElement);
-        </script>
+            connectedCallback() {
+                console.log(1)
+            }
+        }
+
+        customElements.define('counter-element', CounterElement);
+    </script>
 </div>

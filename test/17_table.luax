@@ -17,7 +17,7 @@ function module.Filter(filters)
         href={filter.url}
         _="on click add .selected to me"
       >
-        {filter.name}
+        {filter.name or nil}
       </a>
     </li>)
   end), '\n')

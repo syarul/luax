@@ -108,4 +108,8 @@ local st = require('test.22_script_tag')
 
 h(st)
 
+local st2 = require('test.23_web_component_test')
+
+h(st2)
+
 

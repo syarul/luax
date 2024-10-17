@@ -1,0 +1,47 @@
+local foo = { foo = "foo!" }
+return <!DOCTYPE html>
+    <html>
+        <head>
+            <script type="module" src="https://unpkg.com/@fluentui/web-components"></script>
+        </head>
+        <body>
+            <counter-element></counter-element>
+            <script>
+                class CounterElement extends HTMLElement {
+                    constructor() {
+                        super();
+                        this.attachShadow({ mode: 'open' });
+                        this.count = 0;
+                        this.shadowRoot.innerHTML = `
+                            <fluent-card>
+                                <p>Count: <span id="count">${this.count}</span></p>
+                                <fluent-button id="increment">Increment</fluent-button>
+                                <fluent-button id="decrement" _="foo">Decrement</fluent-button>
+                            </fluent-card>
+                        `;
+                    }
+
+                    connectedCallback() {
+                        this.shadowRoot.querySelector('#increment').addEventListener('click', () => this.increment());
+                        this.shadowRoot.querySelector('#decrement').addEventListener('click', () => this.decrement());
+                    }
+
+                    increment() {
+                        this.count++;
+                        this.updateCount();
+                    }
+
+                    decrement() {
+                        this.count--;
+                        this.updateCount();
+                    }
+
+                    updateCount() {
+                        this.shadowRoot.querySelector('#count').textContent = this.count;
+                    }
+                }
+
+                customElements.define('counter-element', CounterElement);
+            </script>
+        </body>
+    </html>

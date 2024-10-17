@@ -12,11 +12,11 @@ end
 local function fcn(filter)
   return <li>
     <a
-        class={filter.selected and 'selected' or nil}
-        href={filter.url}
-        _="on click add .selected to me"
+      class={filter.selected and 'selected' or nil}
+      href={filter.url}
+      _="on click add .selected to me"
     >
-        {filter.name}
+      {filter.name}
     </a>
   </li>
 end

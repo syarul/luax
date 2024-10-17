@@ -157,19 +157,61 @@ describe("LuaX", function()
 
   it("should return a HTML string when given XML like syntax with script tag", function()
     local scriptTag = require("test.22_script_tag")
-    assert.is.equal([[<div><script>            class CounterElement extends HTMLElement {
-                constructor() {
-                    super();
-                    this.attachShadow({ mode: 'open' });
-                }
-
-                connectedCallback() {
-                    console.log(1)
-                }
+    assert.is.equal([[<div><script>
+        class CounterElement extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
             }
 
-            customElements.define('counter-element', CounterElement);
-        </script></div>]], h(scriptTag))
+            connectedCallback() {
+                console.log(1)
+            }
+        }
+
+        customElements.define('counter-element', CounterElement);
+    </script></div>]], h(scriptTag))
+  end)
+
+  it("should return a HTML string when given XML like syntax with script tag", function()
+    local st2 = require('test.23_web_component_test')
+    assert.is.equal([[<!doctype html><html><head><script src="https://unpkg.com/@fluentui/web-components" type="module"></script></head><body><counter-element></counter-element><script>
+                class CounterElement extends HTMLElement {
+                    constructor() {
+                        super();
+                        this.attachShadow({ mode: 'open' });
+                        this.count = 0;
+                        this.shadowRoot.innerHTML = `
+                            <fluent-card>
+                                <p>Count: <span id="count">${this.count}</span></p>
+                                <fluent-button id="increment">Increment</fluent-button>
+                                <fluent-button id="decrement" _="foo">Decrement</fluent-button>
+                            </fluent-card>
+                        `;
+                    }
+
+                    connectedCallback() {
+                        this.shadowRoot.querySelector('#increment').addEventListener('click', () => this.increment());
+                        this.shadowRoot.querySelector('#decrement').addEventListener('click', () => this.decrement());
+                    }
+
+                    increment() {
+                        this.count++;
+                        this.updateCount();
+                    }
+
+                    decrement() {
+                        this.count--;
+                        this.updateCount();
+                    }
+
+                    updateCount() {
+                        this.shadowRoot.querySelector('#count').textContent = this.count;
+                    }
+                }
+
+                customElements.define('counter-element', CounterElement);
+            </script></body></html>]], h(st2))
   end)
 
 end)

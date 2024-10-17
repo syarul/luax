@@ -1,9 +1,9 @@
 local v = {
- div_class = "container",
- p_class = "title",
- p_inner = "Hello, world!",
- span_style = "color: red;",
- span_inner = "This is a span",
+  div_class = "container",
+  p_class = "title",
+  p_inner = "Hello, world!",
+  span_style = "color: red;",
+  span_inner = "This is a span",
 }
 
 local el = <div id="div_1" class={v.div_class}><p id="p_2" style="border: 1px solid red;" class={v.p_class}>{v.p_inner}</p></div>
