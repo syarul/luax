@@ -1,11 +1,11 @@
 local h = require('h')
 
-local originalRequire = require
+local original_require = require
 
-local function resetTable(store, data)
+local function reset_table(store, data)
   for key, value in pairs(data) do
     -- ignore output, pos and doctype
-    if key ~= "output" and key ~= "pos" and key ~= "docType" then
+    if key ~= "output" and key ~= "pos" and key ~= "doc_type" then
       store[key] = value
     end
   end
@@ -17,21 +17,21 @@ State.__index = State
 function State:new()
   return setmetatable({
     output = "",
-    docType = nil,
+    doc_type = nil,
     pos = 1,
-    deepNode = 0,
-    deepString = false,
-    deepStringApos = false,
-    isTag = false,
-    textNode = false,
-    textNodeStart = false,
-    scriptNode = false,
-    scriptNodeInit = false,
+    deep_node = 0,
+    deep_string = false,
+    deep_string_apos = false,
+    is_tag = false,
+    text_node = false,
+    text_node_start = false,
+    script_node = false,
+    script_node_init = false,
   }, self)
 end
 
-function State:incDeepNode() self.deepNode = self.deepNode + 1 end
-function State:decDeepNode() self.deepNode = self.deepNode - 1 end
+function State:inc_deep_node() self.deep_node = self.deep_node + 1 end
+function State:dec_deep_node() self.deep_node = self.deep_node - 1 end
 function State:inc(v)
   if v ~= nil then self.pos = self.pos + v else self.pos = self.pos + 1 end
 end
@@ -45,15 +45,15 @@ function State:conc(val, inc)
   if inc ~= nil then self:inc(inc) end
 end
 function State:xml(level)
-  if level ~= nil then return self.deepNode > level end
-  return self.deepNode > 0
+  if level ~= nil then return self.deep_node > level end
+  return self.deep_node > 0
 end
-function State:notStr() return not self.deepString and not self.deepStringApos and not self.scriptNode end
+function State:not_str() return not self.deep_string and not self.deep_string_apos and not self.script_node end
 function State:toggle(key, bool)
   if bool ~= nil then self[key] = bool else self[key] = not self[key] end
 end
 
-local function kebabToCamel(str)
+local function kebab_to_camel(str)
   local tag = str:gsub("%-(%w)", function(c)
       return c:upper()
   end)
@@ -61,19 +61,19 @@ local function kebabToCamel(str)
   return tag, count
 end
 
-local function formatDocTypeParams(input)
+local function format_doc_type_params(input)
   local result = {}
   local cw = ""
-  local inQuotes = false
+  local in_quotes = false
   for i = 1, #input do
     local char = input:sub(i, i)
     if char == '"' then
-      inQuotes = not inQuotes
+      in_quotes = not in_quotes
       if cw ~= "" then
         table.insert(result, '"\\"' .. cw .. '\\""')
         cw = ""
       end
-    elseif char == ' ' and not inQuotes then
+    elseif char == ' ' and not in_quotes then
       if cw ~= "" then
         table.insert(result, '"' .. cw .. '"')
         cw = ""
@@ -88,181 +88,194 @@ local function formatDocTypeParams(input)
   return table.concat(result, ', ')
 end
 
-local function decentParserAST(input)
+local function normalize_table_keys(code)
+  return code:gsub("{(.-)}", function(block)
+      local attr_block = block:gsub("([%w%-_]+)%=([^%s]+)", function (attr, value)
+        if attr:match("[-_]") then
+            return '["' .. attr .. '"]=' ..value
+          else
+            return attr .. "=" .. value
+          end
+      end)
+      return "{" .. attr_block .. "}"
+  end)
+end
+
+local function decent_parser_ast(input)
   local var = false
   local s = State:new()
-  local resetStore = {}
-  resetTable(resetStore, s)
-  local varStore = {}
-  local docTypeStartPos = 0
+  local reset_store = {}
+  reset_table(reset_store, s)
+  local var_store = {}
+  local doc_type_start_pos = 0
 
   while s.pos <= #input do
     local tok = input:sub(s.pos, s.pos)
     -- simple decent parser
     -- escape " ' encapsulation
     -- opening tag
-    if tok == "<" and s:notStr() then
+    if tok == "<" and s:not_str() then
 
-      local nextSpacingPos = input:find("%s", s.pos) or input:find("%>", s.pos)
-      local tagRange = input:sub(s.pos, nextSpacingPos)
-      local tagName = tagRange:match("<([%w-]+)", 0)
-      local tagNameEnd = tagRange:match("</([%w-]+)>", 0)
-      local tagDocType = tagRange:match("<(%!%w+)", 0)
-      local tagScript = tagName and tagName:match("script", 0) or tagNameEnd and tagNameEnd:match("script", 0)
-      if tagDocType then
-        tagName = tagDocType:sub(2)
-        s.docType = true
-        docTypeStartPos = s.pos + #tagDocType + 2
+      local next_spacing_pos = input:find("%s", s.pos) or input:find("%>", s.pos)
+      local tag_range = input:sub(s.pos, next_spacing_pos)
+      local tag_name = tag_range:match("<([%w-]+)", 0)
+      local tag_name_end = tag_range:match("</([%w-]+)>", 0)
+      local tag_doc_type = tag_range:match("<(%!%w+)", 0)
+      local tag_script = tag_name and tag_name:match("script", 0) or tag_name_end and tag_name_end:match("script", 0)
+      if tag_doc_type then
+        tag_name = tag_doc_type:sub(2)
+        s.doc_type = true
+        doc_type_start_pos = s.pos + #tag_doc_type + 2
         s:inc()
       end
-      if tagName then
-        if tagName:match("(%-+)") then
-          local tag, count = kebabToCamel(tagName)
-          tagName = tag
+      if tag_name then
+        if tag_name:match("(%-+)") then
+          local tag, count = kebab_to_camel(tag_name)
+          tag_name = tag
           s:inc(count)
         end
-        s:incDeepNode()
+        s:inc_deep_node()
       end
       s:inc()
 
-      if tagName and not s.deepString then
-        s:toggle("isTag", true)
-        s:toggle("textNode", false)
-        if s.textNodeStart then
-          s:toggle("textNodeStart")
+      if tag_name and not s.deep_string then
+        s:toggle("is_tag", true)
+        s:toggle("text_node", false)
+        if s.text_node_start then
+          s:toggle("text_node_start")
           s:conc("]]")
         end
-        if tagScript then
-          s.scriptNodeInit = not s.scriptNodeInit
+        if tag_script then
+          s.script_node_init = not s.script_node_init
         end
         if s:xml(1) then
           -- handle internal return function
           local ret = input:sub(s.pos-8, s.pos):gsub("%s\r\n", ""):sub(0, 6) == "return"
           if ret then
-            s:conc({tagName, "({"})
+            s:conc({tag_name, "({"})
           else
-            s:conc({", ", tagName, "({"})
+            s:conc({", ", tag_name, "({"})
           end
         else
-          s:conc({tagName, "({"})
+          s:conc({tag_name, "({"})
         end
-        s:inc(#tagName)
-      elseif tagNameEnd then
-        if tagNameEnd:match("(%-+)") then
-          local tag, count = kebabToCamel(tagNameEnd)
-          tagNameEnd = tag
+        s:inc(#tag_name)
+      elseif tag_name_end then
+        if tag_name_end:match("(%-+)") then
+          local tag, count = kebab_to_camel(tag_name_end)
+          tag_name_end = tag
           s:inc(count)
         end
-        s:decDeepNode()
-        if s.isTag and not s.textNode then
-          s:toggle("isTag")
+        s:dec_deep_node()
+        if s.is_tag and not s.text_node then
+          s:toggle("is_tag")
           local trail = input:sub(0, s.pos - 2):gsub("[%s\r\n]", "")
           if trail:sub(#trail - 1, #trail - 1) == "/" then
             s:conc(")")
           else
             s:conc("})")
           end
-        elseif s.isTag and s.textNode then
+        elseif s.is_tag and s.text_node then
           s:conc("]])")
         else
-          if s.textNodeStart then
-            s:toggle("textNodeStart")
+          if s.text_node_start then
+            s:toggle("text_node_start")
             s:conc("]])")
           else
             s:conc(")")
           end
         end
-        s:inc(#tagNameEnd + 2)
+        s:inc(#tag_name_end + 2)
       else
         s:conc(tok, 1)
       end
-    elseif tok == "<" and not s:notStr() and input:match("</([%w-]+)>", s.pos) == "script" then
-      s:toggle("scriptNode")
+    elseif tok == "<" and not s:not_str() and input:match("</([%w-]+)>", s.pos) == "script" then
+      s:toggle("script_node")
       s:conc("]]")
-    elseif tok == '"' and s:xml() and not s.scriptNode then
-      s:toggle("deepString")
+    elseif tok == '"' and s:xml() and not s.script_node then
+      s:toggle("deep_string")
       s:conc(tok, 1)
-    elseif tok == "'" and s:xml() and not s.scriptNode then
-      s:toggle("deepStringApos")
+    elseif tok == "'" and s:xml() and not s.script_node then
+      s:toggle("deep_string_apos")
       s:conc(tok, 1)
-    elseif tok == ">" and s:xml() and s:notStr() then
-      if not s.scriptNodeInit and not s.textNode and s.isTag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
-        s:toggle("isTag")
-        s:toggle("textNode")
+    elseif tok == ">" and s:xml() and s:not_str() then
+      if not s.script_node_init and not s.text_node and s.is_tag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
+        s:toggle("is_tag")
+        s:toggle("text_node")
         s:conc("}")
-      elseif s.scriptNodeInit then
-        s:toggle("isTag")
-        s:toggle("scriptNodeInit")
+      elseif s.script_node_init then
+        s:toggle("is_tag")
+        s:toggle("script_node_init")
         local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
         if trail:sub(#trail) == "{" then
-          s:toggle("scriptNode")
+          s:toggle("script_node")
           s:conc("}, [[\n")
         else
           s:conc("}")
         end
       else
-        s.isTag = not s.isTag
-        s:decDeepNode()
+        s.is_tag = not s.is_tag
+        s:dec_deep_node()
         s:conc("})")
       end
 
-      if s.docType then
-        s.docType = not s.docType
-        local docTypeParams = s.output:sub(docTypeStartPos, s.pos - 1)
-        local output = formatDocTypeParams(docTypeParams)
-        s.output = s.output:sub(0, docTypeStartPos-1) .. output .. s.output:sub(s.pos)
+      if s.doc_type then
+        s.doc_type = not s.doc_type
+        local doc_type_params = s.output:sub(doc_type_start_pos, s.pos - 1)
+        local output = format_doc_type_params(doc_type_params)
+        s.output = s.output:sub(0, doc_type_start_pos-1) .. output .. s.output:sub(s.pos)
       end
       s:inc()
-    elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:notStr() then
-      s:decDeepNode()
+    elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:not_str() then
+      s:dec_deep_node()
       s:conc("})")
       s:inc(2)
-    elseif tok == "{" and s:xml() and s:notStr() then
+    elseif tok == "{" and s:xml() and s:not_str() then
       var = not var
       if var then
-        -- snapshot currentState
-        resetTable(varStore, s)
-        -- reset currentState
-        resetTable(s, resetStore)
+        -- snapshot current_state
+        reset_table(var_store, s)
+        -- reset current_state
+        reset_table(s, reset_store)
       end
       local trail = input:sub(s.pos - 20, s.pos-1):gsub("[%s\r\n]", "")
       if trail:sub(#trail) == ">" or trail:sub(#trail) == "}" then
         s:conc(", ")
       end
       s:inc()
-    elseif tok == "}" and var and s:notStr() then
+    elseif tok == "}" and var and s:not_str() then
       var = not var
       if not var then
-        -- restore currentState from snapshot
-        resetTable(s, varStore)
+        -- restore current_state from snapshot
+        reset_table(s, var_store)
       end
       s:inc()
-    elseif s:xml() and s:notStr() then
+    elseif s:xml() and s:not_str() then
       if tok:match("%s") then
-        if not s.docType and not var and s.isTag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
-            s.isTag and input:sub(s.pos - 1, s.pos - 1) == "}" then
+        if not s.doc_type and not var and s.is_tag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
+            s.is_tag and input:sub(s.pos - 1, s.pos - 1) == "}" then
           s:conc(",")
         end
       end
-      if s.textNode and not s.textNodeStart then
-        local subNode = input:match("^%s*<(%w+)", s.pos) or input:match("^%s*{(%w+)", s.pos)
-        if not s.isTag and not subNode and not var then
-          s:toggle("textNodeStart")
+      if s.text_node and not s.text_node_start then
+        local sub_node = input:match("^%s*<(%w+)", s.pos) or input:match("^%s*{(%w+)", s.pos)
+        if not s.is_tag and not sub_node and not var then
+          s:toggle("text_node_start")
           s:conc(", [[")
         end
       end
       s:conc(tok, 1)
     else
-      if not s.textNode and s:notStr() then
-        s:toggle("textNode")
-        if s.textNode then
-          local subNode = input:match("%s*<(%w+)", s.pos)
+      if not s.text_node and s:not_str() then
+        s:toggle("text_node")
+        if s.text_node then
+          local sub_node = input:match("%s*<(%w+)", s.pos)
           local trail = input:sub(s.pos - 10, s.pos):gsub("[%s\r\n]", "")
-          if s.isTag and not subNode then
+          if s.is_tag and not sub_node then
             if trail:sub(#trail, #trail) ~= ">" then
               s:conc("}, [[")
             end
-          elseif s:xml() and not subNode then
+          elseif s:xml() and not sub_node then
             s:conc("[[")
           end
         end
@@ -271,46 +284,34 @@ local function decentParserAST(input)
     end
   end
   -- this to add [] bracket to table attributes
-  -- ignore adding within backtick javascript
-
-  s.output = s.output:gsub('([%w%-_]+)%=([^%s]+)', function (attr, value)
-    local pos = s.output:find(attr .. " = " .. value) or 1
-    local preStrInterpolation = s.output:sub(1, pos):reverse():find("%`")
-    local postStrInterpolation = s.output:find("%`", pos)
-
-    if not preStrInterpolation and not postStrInterpolation and attr:find('[-_]') then
-        return '["' .. attr .. '"]=' .. value
-    else
-        return attr .. '=' .. value
-    end
-  end)
+  s.output = normalize_table_keys(s.output)
   -- encapsulate output if doctype exist
-  if s.docType ~= nil then s:conc(")") end
+  if s.doc_type ~= nil then s:conc(")") end
   return s.output
 end
 
-local function preprocessLuaFile(inputFile)
-  local inputCode = io.open(inputFile, "r"):read("*all")
-  local transformedCode = decentParserAST(inputCode)
+local function preprocess_lua_file(input_file)
+  local input_code = io.open(input_file, "r"):read("*all")
+  local transformed_code = decent_parser_ast(input_code)
   -- print("===================")
-  -- print(transformedCode)
+  -- print(transformed_code)
   -- print("===================")
-  return transformedCode
+  return transformed_code
 end
 
-function _G.require(moduleName)
-  local luaxFile = moduleName:gsub("%.", "/") .. ".luax"
-  local luaFile
-  local file = io.open(luaxFile, "r")
+function _G.require(module_name)
+  local luax_file = module_name:gsub("%.", "/") .. ".luax"
+  local lua_file
+  local file = io.open(luax_file, "r")
   if file then
     file:close()
-    local str = preprocessLuaFile(luaxFile)
+    local str = preprocess_lua_file(luax_file)
     -- eval back to buffer file after transform
-    luaFile = load(str)()
+    lua_file = load(str)()
   else
-    return originalRequire(moduleName)
+    return original_require(module_name)
   end
-  return luaFile
+  return lua_file
 end
 
 return h

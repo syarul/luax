@@ -1,20 +1,20 @@
-local voidTags = {
+local void_tags = {
   "area", "base", "basefont", "br", "col",
   "frame", "hr", "img", "input", "link",
   "meta", "param", "embed", "command", "keygen",
   "source", "track", "wbr"
 }
 
-local function isVoidTag(tag)
-  for _, voidTag in ipairs(voidTags) do
-    if voidTag == tag then
+local function is_void_tag(tag)
+  for _, void_tag in ipairs(void_tags) do
+    if void_tag == tag then
       return true
     end
   end
   return false
 end
 
-local function kebabCase(tag)
+local function kebab_case(tag)
   if not tag:match("^[a-z]") and tag:match("%u%u") and tag:match("[^%w]") then
     return tag
   end
@@ -22,7 +22,7 @@ local function kebabCase(tag)
   return kebab:gsub("^%-", "")
 end
 
-local function createElement(tag, atts, children)
+local function create_element(tag, atts, children)
   return {
     tag = tag,
     atts = atts or {},
@@ -30,7 +30,7 @@ local function createElement(tag, atts, children)
   }
 end
 
-local function isAtts(tbl, tag)
+local function is_atts(tbl, tag)
   if tag:lower() == "doctype" then
     return true
   end
@@ -47,16 +47,16 @@ setmetatable(_G, {
     return function(...)
       local atts
       local children = { ... }
-      if type(children[1]) == "table" and isAtts(children[1], tag) and #children ~= 1 then
+      if type(children[1]) == "table" and is_atts(children[1], tag) and #children ~= 1 then
         atts = children[1]
         children = { select(2, ...) }
       end
-      if atts == nil and isAtts(children[1], tag) then
+      if atts == nil and is_atts(children[1], tag) then
         atts = children[1]
         children = { select(2, children) }
       end
       atts = atts or children[1]
-      return createElement(tag, atts, children)
+      return create_element(tag, atts, children)
     end
   end
 })
@@ -86,11 +86,11 @@ local function h(element)
     end
   end
   if element.tag:lower() == "doctype" then
-    return "<!" .. kebabCase(element.tag:lower()) .. " " .. table.concat(element.atts, " ") .. ">" .. children
-  elseif isVoidTag(element.tag) then
-    return "<" .. kebabCase(element.tag) .. atts .. ">"
+    return "<!" .. kebab_case(element.tag:lower()) .. " " .. table.concat(element.atts, " ") .. ">" .. children
+  elseif is_void_tag(element.tag) then
+    return "<" .. kebab_case(element.tag) .. atts .. ">"
   else
-    return "<" .. kebabCase(element.tag) .. atts .. ">" .. children .. "</" .. kebabCase(element.tag) .. ">"
+    return "<" .. kebab_case(element.tag) .. atts .. ">" .. children .. "</" .. kebab_case(element.tag) .. ">"
   end
 end
 
