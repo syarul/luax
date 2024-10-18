@@ -112,4 +112,8 @@ local st2 = require('test.23_web_component_test')
 
 h(st2)
 
+local st4 = require('test.24_web_component_style')
+
+h(st4)
+
 

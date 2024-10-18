@@ -27,6 +27,8 @@ function State:new()
     text_node_start = false,
     script_node = false,
     script_node_init = false,
+    style_node = false,
+    style_node_init = false,
   }, self)
 end
 
@@ -48,7 +50,7 @@ function State:xml(level)
   if level ~= nil then return self.deep_node > level end
   return self.deep_node > 0
 end
-function State:not_str() return not self.deep_string and not self.deep_string_apos and not self.script_node end
+function State:not_str() return not self.deep_string and not self.deep_string_apos and not self.script_node and not self.style_node end
 function State:toggle(key, bool)
   if bool ~= nil then self[key] = bool else self[key] = not self[key] end
 end
@@ -122,6 +124,7 @@ local function decent_parser_ast(input)
       local tag_name_end = tag_range:match("</([%w-]+)>", 0)
       local tag_doc_type = tag_range:match("<(%!%w+)", 0)
       local tag_script = tag_name and tag_name:match("script", 0) or tag_name_end and tag_name_end:match("script", 0)
+      local tag_style = tag_name and tag_name:match("style", 0) or tag_name_end and tag_name_end:match("style", 0)
       if tag_doc_type then
         tag_name = tag_doc_type:sub(2)
         s.doc_type = true
@@ -147,6 +150,9 @@ local function decent_parser_ast(input)
         end
         if tag_script then
           s.script_node_init = not s.script_node_init
+        end
+        if tag_style then
+          s.style_node_init = not s.style_node_init
         end
         if s:xml(1) then
           -- handle internal return function
@@ -189,8 +195,11 @@ local function decent_parser_ast(input)
       else
         s:conc(tok, 1)
       end
-    elseif tok == "<" and not s:not_str() and input:match("</([%w-]+)>", s.pos) == "script" then
+    elseif tok == "<" and not s.style_node and not s:not_str() and input:match("</([%w-]+)>", s.pos) == "script" then
       s:toggle("script_node")
+      s:conc("]]")
+    elseif tok == "<" and not s.script_node and not s:not_str() and input:match("</([%w-]+)>", s.pos) == "style" then
+      s:toggle("style_node")
       s:conc("]]")
     elseif tok == '"' and s:xml() and not s.script_node then
       s:toggle("deep_string")
@@ -199,16 +208,30 @@ local function decent_parser_ast(input)
       s:toggle("deep_string_apos")
       s:conc(tok, 1)
     elseif tok == ">" and s:xml() and s:not_str() then
-      if not s.script_node_init and not s.text_node and s.is_tag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
+      if not s.style_node_init and not s.script_node_init and not s.text_node and s.is_tag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
         s:toggle("is_tag")
         s:toggle("text_node")
         s:conc("}")
       elseif s.script_node_init then
-        s:toggle("is_tag")
+        if s.is_tag then
+          s:toggle("is_tag")
+        end
         s:toggle("script_node_init")
         local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
         if trail:sub(#trail) == "{" then
           s:toggle("script_node")
+          s:conc("}, [[\n")
+        else
+          s:conc("}")
+        end
+      elseif s.style_node_init and not s.script_node_init then
+        if s.is_tag then
+          s:toggle("is_tag")
+        end
+        s:toggle("style_node_init")
+        local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
+        if trail:sub(#trail) == "{" then
+          s:toggle("style_node")
           s:conc("}, [[\n")
         else
           s:conc("}")
@@ -218,7 +241,6 @@ local function decent_parser_ast(input)
         s:dec_deep_node()
         s:conc("})")
       end
-
       if s.doc_type then
         s.doc_type = not s.doc_type
         local doc_type_params = s.output:sub(doc_type_start_pos, s.pos - 1)

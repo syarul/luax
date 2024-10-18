@@ -214,4 +214,42 @@ describe("LuaX", function()
             </script></body></html>]], h(st2))
   end)
 
+  it("should return a HTML string when given XML like syntax with script tag", function()
+    local st3 = require('test.24_web_component_style')
+    assert.is.equal([[<!doctype html><html><head><style>
+            button {
+                background-color: red;
+                display: block;
+                margin-top: 8px;
+            }
+
+            example-component::part(native) {
+                background-color: pink;
+            }
+        </style></head><body><example-component></example-component><button>Button in Light DOM</button><script>
+            // Use custom elements API v1 to register a new HTML tag and define its JS behavior
+            // using an ES6 class. Every instance of <fancy-tab> will have this same prototype.
+            customElements.define('example-component', class extends HTMLElement {
+                constructor() {
+                    super(); // always call super() first in the constructor.
+
+                    // Attach a shadow root to <fancy-tabs>.
+                    const shadowRoot = this.attachShadow({mode: 'open'});
+                    shadowRoot.innerHTML = `
+                        <style>
+                            div {
+                                height: 150px;
+                                width: 150px;
+                                border: solid 2px;
+                            }
+                        </style>
+
+                        <div part="native"></div>
+                        <button>Button in Shadow DOM</button>
+                    `;
+                }
+            });
+        </script></body></html>]], h(st3))
+  end)
+
 end)
