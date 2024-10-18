@@ -88,6 +88,10 @@ return <ul class="filters" _="on load set $filter to me">
 See the test folder to see more usage cases.
 
 ## Sample Project
+
+Check example with `lua examples/web-component/server.lua`
+
+Also todoMCV example at,
 [https://github.com/syarul/todomvc-lua-luasocket-htmx-_hyperscript](https://github.com/syarul/todomvc-lua-luasocket-htmx-_hyperscript)
 
 ## VSCode Integration

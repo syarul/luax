@@ -1,0 +1,64 @@
+return <!doctype html>
+    <html>
+        <head>
+            <script type="module" src="https://unpkg.com/@fluentui/web-components"></script>
+            <style>
+                counter-element::part(card) {
+                    padding: 22px;
+                    justify-items: center;
+                }
+            </style>
+        </head>
+        <body>
+            <counter-element></counter-element>
+            <script>
+                class CounterElement extends HTMLElement {
+                    constructor() {
+                        super();
+                        this.attachShadow({ mode: 'open' });
+                        this.count = 0;
+                        this.shadowRoot.innerHTML = `
+                            <fluent-card part="card">
+                                <p>Count: <span id="count">${this.count}</span></p>
+                                <fluent-button id="increment">Increment</fluent-button>
+                                <fluent-button id="decrement">Decrement</fluent-button>
+                            </fluent-card>
+                        `;
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            :host {
+                                font-family: sans-serif;
+                                padding: 1em;
+                                --card-width: 350px;
+                                --card-height: 300px;
+                                display: flex;
+                                justify-content: center;
+                            }
+                        `;
+                        this.shadowRoot.appendChild(style);
+                    }
+
+                    connectedCallback() {
+                        this.shadowRoot.querySelector('#increment').addEventListener('click', () => this.increment());
+                        this.shadowRoot.querySelector('#decrement').addEventListener('click', () => this.decrement());
+                    }
+
+                    increment() {
+                        this.count++;
+                        this.updateCount();
+                    }
+
+                    decrement() {
+                        this.count--;
+                        this.updateCount();
+                    }
+
+                    updateCount() {
+                        this.shadowRoot.querySelector('#count').textContent = this.count;
+                    }
+                }
+
+                customElements.define('counter-element', CounterElement);
+            </script>
+        </body>
+    </html>
