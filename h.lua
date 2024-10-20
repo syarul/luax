@@ -70,7 +70,7 @@ local function sanitize_value(str)
 end
 
 local function h(element)
-  if type(element) ~= "table" then return element or "" end
+  if type(element) ~= "table" then return sanitize_value(element) or "" end
   local tkeys = {}
   -- asume  as nodeList
   if type(element.atts) ~= "table" then
