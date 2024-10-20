@@ -1,44 +1,35 @@
-return <!DOCTYPE html>
-    <html>
-        <head>
-            <style>
-                button {
-                    background-color: red;
-                    display: block;
-                    margin-top: 8px;
-                }
+local function map(a, fcn)
+  local b = {}
+  for _, v in ipairs(a) do
+    table.insert(b, fcn(v))
+  end
+  return b
+end
 
-                example-component::part(native) {
-                    background-color: pink;
-                }
-            </style>
-        </head>
-        <body>
-            <example-component></example-component>
-            <button>Button in Light DOM</button>
-            <script>
-                // Use custom elements API v1 to register a new HTML tag and define its JS behavior
-                // using an ES6 class. Every instance of <fancy-tab> will have this same prototype.
-                customElements.define('example-component', class extends HTMLElement {
-                constructor() {
-                    super(); // always call super() first in the constructor.
+local filters = {
+    { url = "#/",          name = "All",       selected = true },
+    { url = "#/active",    name = "Active",    selected = false },
+    { url = "#/completed", name = "Completed", selected = false },
+}
 
-                    // Attach a shadow root to <fancy-tabs>.
-                    const shadowRoot = this.attachShadow({mode: 'open'});
-                    shadowRoot.innerHTML = `
-                    <style>
-                        div {
-                            height: 150px;
-                            width: 150px;
-                            border: solid 2px;
-                        }
-                    </style>
-                    
-                    <div part="native"></div>  
-                    <button>Button in Shadow DOM</button>
-                    `;
-                }
-                });
-            </script>
-        </body>
-    </html>
+local function list_filter(filter)
+    return <li>
+        <a
+            class={filter.selected and 'selected' or nil}
+            href={filter.url}
+            _="on click add .selected to me"
+        >
+            {filter.name or nil}
+        </a>
+    </li>
+end
+
+local content = map(filters, list_filter)
+
+return <html>
+    <head>
+    </head>
+    <body>
+        {content}
+    </body>
+</html>

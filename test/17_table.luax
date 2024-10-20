@@ -10,8 +10,8 @@ local function map(a, fcn)
 end
 
 function module.Filter(filters)
-  local content = table.concat(map(filters, function(filter)
-    return h(<li>
+  local content = map(filters, function(filter)
+    return <li>
       <a
         class={filter.selected and 'selected' or nil}
         href={filter.url}
@@ -19,8 +19,8 @@ function module.Filter(filters)
       >
         {filter.name or nil}
       </a>
-    </li>)
-  end), '\n')
+    </li>
+  end)
 
   return <ul class="filters" _="on load set $filter to me">
     {content}

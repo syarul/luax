@@ -95,7 +95,7 @@ describe("LuaX", function()
   it("should return a HTML string when given input node", function()
     local el = require("test.09_input2")
     assert.is.equal(
-    '<input _="install TodoCheck" class="toggle" hx-patch="/toggle-todo?id=1&done=false" hx-swap="outerHTML" hx-target="closest <li/>" type="checkbox">',
+    '<input _="install TodoCheck" class="toggle" hx-patch="/toggle-todo?id=1&amp;done=false" hx-swap="outerHTML" hx-target="closest &lt;li/&gt;" type="checkbox">',
       h(el))
   end)
 
@@ -115,7 +115,7 @@ describe("LuaX", function()
   it("should return a HTML string with deep node tree", function()
     local el = require("test.12_test")
     assert.is.equal(
-    [[<li _="on destroy my.querySelector('button').click()" class="test" id="1"><div class="view">todo A<label _="install TodoDblclick" hx-patch="/edit-todo?id=1&foo=test" hx-swap="outerHTML" hx-target="next input" hx-trigger="dblclick">todo A Label          </label><button _="install Destroy" class="destroy" hx-delete="/remove-todo?id=1" hx-swap="outerHTML" hx-target="closest <li/>" hx-trigger="click"></button></div>todo A Value</li>]],
+    [[<li _="on destroy my.querySelector('button').click()" class="test" id="1"><div class="view">todo A<label _="install TodoDblclick" hx-patch="/edit-todo?id=1&amp;foo=test" hx-swap="outerHTML" hx-target="next input" hx-trigger="dblclick">todo A Label          </label><button _="install Destroy" class="destroy" hx-delete="/remove-todo?id=1" hx-swap="outerHTML" hx-target="closest &lt;li/&gt;" hx-trigger="click"></button></div>todo A Value</li>]],
       h(el))
   end)
 
@@ -137,16 +137,12 @@ describe("LuaX", function()
 
   it("should return a HTML string when given XML like syntax with table concat", function()
     local el = require("test.17_table")
-    assert.is.equal([[<ul _="on load set $filter to me" class="filters"><li><a _="on click add .selected to me" class="selected" href="#/">All      </a>    </li>
-<li><a _="on click add .selected to me" href="#/active">Active      </a>    </li>
-<li><a _="on click add .selected to me" href="#/completed">Completed      </a>    </li>  </ul>]], h(el.Filter(filters)))
+    assert.is.equal([[<ul _="on load set $filter to me" class="filters"><li><a _="on click add .selected to me" class="selected" href="#/">All      </a>    </li><li><a _="on click add .selected to me" href="#/active">Active      </a>    </li><li><a _="on click add .selected to me" href="#/completed">Completed      </a>    </li>  </ul>]], h(el.Filter(filters)))
   end)
 
   it("should return a HTML string when given XML like syntax with table concat", function()
     local el = require("test.18_filter")
-    assert.is.equal([[<ul class="todo-list"><li><a _="on click add .selected to me" class="selected" href="#/">All    </a>  </li>
-<li><a _="on click add .selected to me" href="#/active">Active    </a>  </li>
-<li><a _="on click add .selected to me" href="#/completed">Completed    </a>  </li></ul>]], h(el(filters)))
+    assert.is.equal([[<ul class="todo-list"><li><a _="on click add .selected to me" class="selected" href="#/">All    </a>  </li><li><a _="on click add .selected to me" href="#/active">Active    </a>  </li><li><a _="on click add .selected to me" href="#/completed">Completed    </a>  </li></ul>]], h(el(filters)))
   end)
 
   it("should return a HTML string when given XML like syntax with kebab-case tag", function()

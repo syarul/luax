@@ -2,7 +2,7 @@
 
 LuaX is Lua + XML Syntax extension with built-in decent parse. In retrospect it's akin to React JSX.
 
-<a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.0.8-blue.svg" style="max-width:100%;"></a>
+<a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.1.0-blue.svg" style="max-width:100%;"></a>
 [![Lua CI](https://github.com/syarul/luax/actions/workflows/lua.yml/badge.svg)](https://github.com/syarul/luax/actions/workflows/lua.yml)
 
 ## Decent Parser
@@ -67,9 +67,8 @@ local filters = {
   { url = "#/completed", name = "Completed", selected = false },
 }
 
-local content = table.concat(map(filters, function(filter)
-  -- convert to string
-  return h(<li>
+local content = map(filters, function(filter)
+  return <li>
     <a
       class={filter.selected and 'selected' or nil}
       href={filter.url}
@@ -77,8 +76,8 @@ local content = table.concat(map(filters, function(filter)
     >
       {filter.name}
     </a>
-  </li>)
-end), '\n')
+  </li>
+end)
 
 return <ul class="filters" _="on load set $filter to me">
     {content}

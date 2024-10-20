@@ -61,9 +61,25 @@ setmetatable(_G, {
   end
 })
 
+local function sanitize_value(str)
+    return (str:gsub("[<>&]", {
+        ["<"] = "&lt;",
+        [">"] = "&gt;",
+        ["&"] = "&amp;"
+    }))
+end
+
 local function h(element)
   if type(element) ~= "table" then return element or "" end
   local tkeys = {}
+  -- asume  as nodeList
+  if type(element.atts) ~= "table" then
+    local node_list = {}
+    for _, k in ipairs(element) do
+      table.insert(node_list,  h(k) or "")
+    end
+    return table.concat(node_list)
+  end
   for k in pairs(element.atts) do table.insert(tkeys, k) end
   if #tkeys then table.sort(tkeys) end
   local atts = ""
@@ -72,7 +88,7 @@ local function h(element)
     local v = element.atts[k]
     if type(v) ~= "table" then
       if k ~= "children" then
-        atts = atts .. " " .. k .. "=\"" .. v .. "\""
+        atts = atts .. " " .. k .. "=\"" .. sanitize_value(v) .. "\""
       else
         children = v
       end
@@ -81,8 +97,10 @@ local function h(element)
   for _, child in ipairs(element.children) do
     if type(child) == "table" then
       children = children .. h(child)
-    else
+    elseif element.tag == "script" then
       children = children .. child
+    else
+      children = children .. sanitize_value(child)
     end
   end
   if element.tag:lower() == "doctype" then

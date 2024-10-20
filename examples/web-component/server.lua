@@ -60,14 +60,6 @@ local function get_headers(client, headers)
     end
 end
 
--- local function sanitize_text(str)
---     return (str:gsub("[<>&]", {
---         ["<"] = "&lt;",
---         [">"] = "&gt;",
---         ["&"] = "&amp;"
---     }))
--- end
-
 local function render(client, status_code, body, custom_headers)
     local header_string = "HTTP/1.1 " .. status_code .. "\r\n"
     local headers = {
@@ -97,6 +89,7 @@ local function handler(client, request)
         local parsed_url = url.parse(path)
 
         if parsed_url.path == "/" then
+            -- printTable(app)
             local html = h(app)
             render(client, "200 OK", html)
         elseif mimes[parsed_url.path:lower():match("[^.]*$")] and method == "GET" then

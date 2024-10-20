@@ -1,14 +1,6 @@
 
 local h = require('luax')
 
-local function map(a, fcn)
-  local b = {}
-  for _, v in ipairs(a) do
-    table.insert(b, fcn(v))
-  end
-  return b
-end
-
 local function fcn(filter)
   return <li>
     <a
@@ -22,9 +14,10 @@ local function fcn(filter)
 end
 
 local function list(filters)
-  local content = table.concat(map(filters, function(filter)
-    return h(fcn(filter))
-  end), '\n')
+  local content = {}
+  for _, filter in ipairs(filters) do
+    table.insert(content, fcn(filter))
+  end
   return <ul class="todo-list">{content}</ul>
 end
 
