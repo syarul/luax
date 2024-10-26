@@ -1,6 +1,6 @@
 ## LuaX
 
-LuaX is Lua + XML Syntax extension with built-in decent parse. In retrospect it's akin to React JSX.
+LuaX is Lua + HTML Syntax extension with built-in decent parse. In retrospect it's akin to React JSX.
 
 <a href="https://luarocks.org/modules/syarul/luax" rel="nofollow"><img alt="Luarocks Package" src="https://img.shields.io/badge/Luarocks-1.1.0-blue.svg" style="max-width:100%;"></a>
 [![Lua CI](https://github.com/syarul/luax/actions/workflows/lua.yml/badge.svg)](https://github.com/syarul/luax/actions/workflows/lua.yml)
