@@ -103,6 +103,191 @@ local function normalize_table_keys(code)
   end)
 end
 
+local function handle_opening_tag(s, input, doc_type_start_pos)
+  local next_spacing_pos = input:find("%s", s.pos) or input:find("%>", s.pos)
+  local tag_range = input:sub(s.pos, next_spacing_pos)
+  local tag_name = tag_range:match("<([%w-]+)", 0)
+  local tag_name_end = tag_range:match("</([%w-]+)>", 0)
+  local tag_doc_type = tag_range:match("<(%!%w+)", 0)
+  local tag_script = tag_name and tag_name:match("script", 0) or tag_name_end and tag_name_end:match("script", 0)
+  local tag_style = tag_name and tag_name:match("style", 0) or tag_name_end and tag_name_end:match("style", 0)
+  if tag_doc_type then
+    tag_name = tag_doc_type:sub(2)
+    s.doc_type = true
+    doc_type_start_pos = s.pos + #tag_doc_type + 2
+    s:inc()
+  end
+  if tag_name then
+    if tag_name:match("(%-+)") then
+      local tag, count = kebab_to_camel(tag_name)
+      tag_name = tag
+      s:inc(count)
+    end
+    s:inc_deep_node()
+  end
+  s:inc()
+
+  if tag_name and not s.deep_string then
+    s:toggle("is_tag", true)
+    s:toggle("text_node", false)
+    if s.text_node_start then
+      s:toggle("text_node_start")
+      s:conc("]]")
+    end
+    if tag_script then
+      s.script_node_init = not s.script_node_init
+    end
+    if tag_style then
+      s.style_node_init = not s.style_node_init
+    end
+    if s:xml(1) then
+      -- handle internal return function
+      local ret = input:sub(s.pos-8, s.pos):gsub("%s\r\n", ""):sub(0, 6) == "return"
+      if ret then
+        s:conc({tag_name, "({"})
+      else
+        s:conc({", ", tag_name, "({"})
+      end
+    else
+      s:conc({tag_name, "({"})
+    end
+    s:inc(#tag_name)
+  elseif tag_name_end then
+    if tag_name_end:match("(%-+)") then
+      local tag, count = kebab_to_camel(tag_name_end)
+      tag_name_end = tag
+      s:inc(count)
+    end
+    s:dec_deep_node()
+    if s.is_tag and not s.text_node then
+      s:toggle("is_tag")
+      local trail = input:sub(0, s.pos - 2):gsub("[%s\r\n]", "")
+      if trail:sub(#trail - 1, #trail - 1) == "/" then
+        s:conc(")")
+      else
+        s:conc("})")
+      end
+    elseif s.is_tag and s.text_node then
+      s:conc("]])")
+    else
+      if s.text_node_start then
+        s:toggle("text_node_start")
+        s:conc("]])")
+      else
+        s:conc(")")
+      end
+    end
+    s:inc(#tag_name_end + 2)
+  else
+    s:conc(tok, 1)
+  end
+  return doc_type_start_pos
+end
+
+local function handle_closing_tag(s, input, doc_type_start_pos)
+  if not s.style_node_init and not s.script_node_init and not s.text_node and s.is_tag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
+    s:toggle("is_tag")
+    s:toggle("text_node")
+    s:conc("}")
+  elseif s.script_node_init then
+    if s.is_tag then
+      s:toggle("is_tag")
+    end
+    s:toggle("script_node_init")
+    local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
+    if trail:sub(#trail) == "{" then
+      s:toggle("script_node")
+      s:conc("}, [[\n")
+    else
+      s:conc("}")
+    end
+  elseif s.style_node_init and not s.script_node_init then
+    if s.is_tag then
+      s:toggle("is_tag")
+    end
+    s:toggle("style_node_init")
+    local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
+    if trail:sub(#trail) == "{" then
+      s:toggle("style_node")
+      s:conc("}, [[\n")
+    else
+      s:conc("}")
+    end
+  else
+    s.is_tag = not s.is_tag
+    s:dec_deep_node()
+    s:conc("})")
+  end
+  if s.doc_type then
+    s.doc_type = not s.doc_type
+    local doc_type_params = s.output:sub(doc_type_start_pos, s.pos - 1)
+    local output = format_doc_type_params(doc_type_params)
+    s.output = s.output:sub(0, doc_type_start_pos-1) .. output .. s.output:sub(s.pos)
+  end
+  s:inc()
+end
+
+local function handle_opening_bracket(s, input, var, var_store, reset_store)
+  var = not var
+  if var then
+    -- snapshot current_state
+    reset_table(var_store, s)
+    -- reset current_state
+    reset_table(s, reset_store)
+  end
+  local trail = input:sub(s.pos - 20, s.pos-1):gsub("[%s\r\n]", "")
+  if trail:sub(#trail) == ">" or trail:sub(#trail) == "}" then
+    s:conc(", ")
+  end
+  s:inc()
+  return var
+end
+
+local function handle_closing_bracket(s, input, var, var_store)
+  var = not var
+  if not var then
+    -- restore current_state from snapshot
+    reset_table(s, var_store)
+  end
+  s:inc()
+  return var
+end
+
+local function handle_xml(s, input, var, tok)
+  if tok:match("%s") then
+    if not s.doc_type and not var and s.is_tag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
+        s.is_tag and input:sub(s.pos - 1, s.pos - 1) == "}" then
+      s:conc(",")
+    end
+  end
+  if s.text_node and not s.text_node_start then
+    local sub_node = input:match("^%s*<(%w+)", s.pos) or input:match("^%s*{(%w+)", s.pos)
+    if not s.is_tag and not sub_node and not var then
+      s:toggle("text_node_start")
+      s:conc(", [[")
+    end
+  end
+  s:conc(tok, 1)
+end
+
+local function handle_other(s, input, tok)
+  if not s.text_node and s:not_str() then
+    s:toggle("text_node")
+    if s.text_node then
+      local sub_node = input:match("%s*<(%w+)", s.pos)
+      local trail = input:sub(s.pos - 10, s.pos):gsub("[%s\r\n]", "")
+      if s.is_tag and not sub_node then
+        if trail:sub(#trail, #trail) ~= ">" then
+          s:conc("}, [[")
+        end
+      elseif s:xml() and not sub_node then
+        s:conc("[[")
+      end
+    end
+  end
+  s:conc(tok, 1)
+end
+
 local function decent_parser_ast(input)
   local var = false
   local s = State:new()
@@ -117,84 +302,7 @@ local function decent_parser_ast(input)
     -- escape " ' encapsulation
     -- opening tag
     if tok == "<" and s:not_str() then
-
-      local next_spacing_pos = input:find("%s", s.pos) or input:find("%>", s.pos)
-      local tag_range = input:sub(s.pos, next_spacing_pos)
-      local tag_name = tag_range:match("<([%w-]+)", 0)
-      local tag_name_end = tag_range:match("</([%w-]+)>", 0)
-      local tag_doc_type = tag_range:match("<(%!%w+)", 0)
-      local tag_script = tag_name and tag_name:match("script", 0) or tag_name_end and tag_name_end:match("script", 0)
-      local tag_style = tag_name and tag_name:match("style", 0) or tag_name_end and tag_name_end:match("style", 0)
-      if tag_doc_type then
-        tag_name = tag_doc_type:sub(2)
-        s.doc_type = true
-        doc_type_start_pos = s.pos + #tag_doc_type + 2
-        s:inc()
-      end
-      if tag_name then
-        if tag_name:match("(%-+)") then
-          local tag, count = kebab_to_camel(tag_name)
-          tag_name = tag
-          s:inc(count)
-        end
-        s:inc_deep_node()
-      end
-      s:inc()
-
-      if tag_name and not s.deep_string then
-        s:toggle("is_tag", true)
-        s:toggle("text_node", false)
-        if s.text_node_start then
-          s:toggle("text_node_start")
-          s:conc("]]")
-        end
-        if tag_script then
-          s.script_node_init = not s.script_node_init
-        end
-        if tag_style then
-          s.style_node_init = not s.style_node_init
-        end
-        if s:xml(1) then
-          -- handle internal return function
-          local ret = input:sub(s.pos-8, s.pos):gsub("%s\r\n", ""):sub(0, 6) == "return"
-          if ret then
-            s:conc({tag_name, "({"})
-          else
-            s:conc({", ", tag_name, "({"})
-          end
-        else
-          s:conc({tag_name, "({"})
-        end
-        s:inc(#tag_name)
-      elseif tag_name_end then
-        if tag_name_end:match("(%-+)") then
-          local tag, count = kebab_to_camel(tag_name_end)
-          tag_name_end = tag
-          s:inc(count)
-        end
-        s:dec_deep_node()
-        if s.is_tag and not s.text_node then
-          s:toggle("is_tag")
-          local trail = input:sub(0, s.pos - 2):gsub("[%s\r\n]", "")
-          if trail:sub(#trail - 1, #trail - 1) == "/" then
-            s:conc(")")
-          else
-            s:conc("})")
-          end
-        elseif s.is_tag and s.text_node then
-          s:conc("]])")
-        else
-          if s.text_node_start then
-            s:toggle("text_node_start")
-            s:conc("]])")
-          else
-            s:conc(")")
-          end
-        end
-        s:inc(#tag_name_end + 2)
-      else
-        s:conc(tok, 1)
-      end
+      doc_type_start_pos = handle_opening_tag(s, input, doc_type_start_pos)
     elseif tok == "<" and not s.style_node and not s:not_str() and input:match("</([%w-]+)>", s.pos) == "script" then
       s:toggle("script_node")
       s:conc("]]")
@@ -208,101 +316,19 @@ local function decent_parser_ast(input)
       s:toggle("deep_string_apos")
       s:conc(tok, 1)
     elseif tok == ">" and s:xml() and s:not_str() then
-      if not s.style_node_init and not s.script_node_init and not s.text_node and s.is_tag and input:sub(s.pos - 1, s.pos - 1) ~= "/" then
-        s:toggle("is_tag")
-        s:toggle("text_node")
-        s:conc("}")
-      elseif s.script_node_init then
-        if s.is_tag then
-          s:toggle("is_tag")
-        end
-        s:toggle("script_node_init")
-        local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
-        if trail:sub(#trail) == "{" then
-          s:toggle("script_node")
-          s:conc("}, [[\n")
-        else
-          s:conc("}")
-        end
-      elseif s.style_node_init and not s.script_node_init then
-        if s.is_tag then
-          s:toggle("is_tag")
-        end
-        s:toggle("style_node_init")
-        local trail = s.output:sub(#s.output - 10, #s.output):gsub("[%s\r\n]", "")
-        if trail:sub(#trail) == "{" then
-          s:toggle("style_node")
-          s:conc("}, [[\n")
-        else
-          s:conc("}")
-        end
-      else
-        s.is_tag = not s.is_tag
-        s:dec_deep_node()
-        s:conc("})")
-      end
-      if s.doc_type then
-        s.doc_type = not s.doc_type
-        local doc_type_params = s.output:sub(doc_type_start_pos, s.pos - 1)
-        local output = format_doc_type_params(doc_type_params)
-        s.output = s.output:sub(0, doc_type_start_pos-1) .. output .. s.output:sub(s.pos)
-      end
-      s:inc()
+      handle_closing_tag(s, input, doc_type_start_pos)
     elseif tok == "/" and input:sub(s.pos + 1, s.pos + 1) == ">" and s:not_str() then
       s:dec_deep_node()
       s:conc("})")
       s:inc(2)
     elseif tok == "{" and s:xml() and s:not_str() then
-      var = not var
-      if var then
-        -- snapshot current_state
-        reset_table(var_store, s)
-        -- reset current_state
-        reset_table(s, reset_store)
-      end
-      local trail = input:sub(s.pos - 20, s.pos-1):gsub("[%s\r\n]", "")
-      if trail:sub(#trail) == ">" or trail:sub(#trail) == "}" then
-        s:conc(", ")
-      end
-      s:inc()
+      var = handle_opening_bracket(s, input, var, var_store, reset_store)
     elseif tok == "}" and var and s:not_str() then
-      var = not var
-      if not var then
-        -- restore current_state from snapshot
-        reset_table(s, var_store)
-      end
-      s:inc()
+      var = handle_closing_bracket(s, input, var, var_store)
     elseif s:xml() and s:not_str() then
-      if tok:match("%s") then
-        if not s.doc_type and not var and s.is_tag and s.output:sub(-1) ~= "{" and s.output:sub(-1) == "\"" or
-            s.is_tag and input:sub(s.pos - 1, s.pos - 1) == "}" then
-          s:conc(",")
-        end
-      end
-      if s.text_node and not s.text_node_start then
-        local sub_node = input:match("^%s*<(%w+)", s.pos) or input:match("^%s*{(%w+)", s.pos)
-        if not s.is_tag and not sub_node and not var then
-          s:toggle("text_node_start")
-          s:conc(", [[")
-        end
-      end
-      s:conc(tok, 1)
+      handle_xml(s, input, var, tok)
     else
-      if not s.text_node and s:not_str() then
-        s:toggle("text_node")
-        if s.text_node then
-          local sub_node = input:match("%s*<(%w+)", s.pos)
-          local trail = input:sub(s.pos - 10, s.pos):gsub("[%s\r\n]", "")
-          if s.is_tag and not sub_node then
-            if trail:sub(#trail, #trail) ~= ">" then
-              s:conc("}, [[")
-            end
-          elseif s:xml() and not sub_node then
-            s:conc("[[")
-          end
-        end
-      end
-      s:conc(tok, 1)
+      handle_other(s, input, tok)
     end
   end
   -- this to add [] bracket to table attributes
