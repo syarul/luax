@@ -1,9 +1,9 @@
 package = "luax"
-version = "1.1.0-1"
+version = "1.2.0-1"
 
 source = {
-    url = "https://github.com/syarul/luax/archive/refs/tags/v1.1.0.tar.gz",
-    dir = "luax-1.1.0"
+    url = "https://github.com/syarul/luax/archive/refs/tags/v1.2.0.tar.gz",
+    dir = "luax-1.2.0"
 }
 description = {
     summary = "HTML parse in Lua",
