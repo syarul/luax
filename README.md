@@ -31,7 +31,7 @@ So how to use with actual HTML syntax in Lua? First create a `*.luax` file,
 ```lua
 -- el.luax
 local attr = { style="color: red;" }
-return <div style={attr.stlye}>hello from LuaX!</div>
+return <div style={attr.style}>hello from LuaX!</div>
 ```
 
 import it on to the main
